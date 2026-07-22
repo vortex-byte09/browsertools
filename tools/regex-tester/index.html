@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -11,7 +11,13 @@
 </style>
 </head>
 <body>
-<div class="shell">
+<header class="mobile-header" id="mobileHeader">
+  <a href="/" class="brand-mobile"><span class="led" data-state="done"></span> BrowserTools</a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open navigation" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header><div class="shell">
+<div class="nav-overlay" id="navOverlay"></div>
   <nav class="sidenav">
     <div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
     <h4>PDF</h4>
@@ -45,7 +51,10 @@
       <li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
       <li><a href="/tools/regex-tester/" class="active">Regex Tester</a></li>
     </ul>
-  </nav>
+    <div class="sidenav-footer">
+      <a href="/about.html">About</a>
+      <a href="/privacy.html">Privacy</a>
+    </div>  </nav>
 
   <main class="main">
     <header class="tool-header">
@@ -61,7 +70,12 @@
       <input type="text" id="patternInput" placeholder="\b[\w.-]+@[\w.-]+\.\w+\b" value="\b[\w.-]+@[\w.-]+\.\w+\b">
     </div>
     <div class="field">
-      <label><input type="checkbox" id="flagG" checked> global (g) &nbsp; <input type="checkbox" id="flagI"> ignore case (i) &nbsp; <input type="checkbox" id="flagM"> multiline (m)</label>
+      <label>Flags</label>
+      <div class="flag-row">
+        <label><input type="checkbox" id="flagG" checked> global (g)</label>
+        <label><input type="checkbox" id="flagI"> ignore case (i)</label>
+        <label><input type="checkbox" id="flagM"> multiline (m)</label>
+      </div>
     </div>
     <div class="field">
       <label for="sampleInput">Sample text</label>
@@ -160,5 +174,22 @@ function run() {
 ['flagG', 'flagI', 'flagM'].forEach(id => document.getElementById(id).addEventListener('change', run));
 run();
 </script>
-</body>
+<footer class="site-footer">
+  <span>&copy; BrowserTools</span>
+  <a href="/about.html">About</a>
+  <a href="/privacy.html">Privacy Policy</a>
+</footer>
+<script>
+(function(){
+  var btn = document.getElementById('hamburgerBtn');
+  var nav = document.querySelector('.sidenav');
+  var overlay = document.getElementById('navOverlay');
+  if (!btn || !nav || !overlay) return;
+  function openNav() { nav.classList.add('open'); overlay.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+  function closeNav() { nav.classList.remove('open'); overlay.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+  btn.addEventListener('click', function(){ nav.classList.contains('open') ? closeNav() : openNav(); });
+  overlay.addEventListener('click', closeNav);
+  nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeNav); });
+})();
+</script></body>
 </html>

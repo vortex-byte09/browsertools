@@ -62,10 +62,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   grid-template-columns: 220px 1fr;
   min-height: 100vh;
 }
-@media (max-width: 860px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidenav { display: none; }
-}
+/* Mobile shell/sidenav rules handled in the mobile-responsive section below */
+
 
 .sidenav {
   border-right: 1px solid var(--line);
@@ -74,6 +72,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .sidenav .brand {
   font-weight: 600;
@@ -252,4 +252,169 @@ textarea, input[type="text"] {
   word-break: break-all;
   max-height: 320px;
   overflow-y: auto;
+}
+
+/* ---------- Site footer (About & Privacy links) ---------- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 16px clamp(20px, 5vw, 56px);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-left: 220px; /* matches sidenav width on desktop */
+}
+@media (max-width: 860px) {
+  .site-footer { margin-left: 0; }
+}
+.site-footer a { color: var(--ink-soft); }
+.site-footer a:hover { color: var(--brand); text-decoration: underline; }
+
+/* Sidenav footer links (shown inside the sidenav at bottom) */
+.sidenav-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 12px;
+}
+.sidenav-footer a { color: var(--ink-soft); }
+.sidenav-footer a:hover { color: var(--brand); text-decoration: underline; }
+
+
+/* ---------- Mobile header (hamburger) ---------- */
+.mobile-header {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+.mobile-header .brand-mobile {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.hamburger {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+/* Overlay when nav is open */
+.nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 150;
+}
+.nav-overlay.open { display: block; }
+
+/* ---------- Responsive breakpoints ---------- */
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+
+  .mobile-header { display: flex; }
+
+  /* Sidenav becomes a slide-in drawer */
+  .sidenav {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    z-index: 160;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    overflow-y: auto;
+    background: var(--bg);
+  }
+  .sidenav.open { transform: translateX(0); }
+
+  .main {
+    padding: 20px 16px 64px;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* Card grid: 2 cols on tablet */
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  .tool-header h1 { font-size: 18px; }
+}
+
+/* Global overflow guards */
+body { overflow-x: hidden; }
+textarea, input[type="text"], select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.btn { max-width: 100%; }
+
+/* ---------- pdf-to-images thumbnail grid (responsive) ---------- */
+#pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.page-thumb canvas { max-width: min(120px, 40vw) !important; height: auto !important; }
+
+/* ---------- pdf-merge file-list rows (responsive) ---------- */
+@media (max-width: 540px) {
+  .file-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+/* ---------- regex-tester flag checkboxes row ---------- */
+.flag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: center;
+}
+.flag-row label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  cursor: pointer;
+  white-space: nowrap;
 }
