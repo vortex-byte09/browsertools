@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JSON to CSV Converter â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>JSON to CSV Converter — offline, no upload | BrowserTools</title>
 <meta name="description" content="Convert JSON to CSV instantly in your browser. No upload, works with nested arrays of objects, nothing leaves your device.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,10 +67,10 @@
   <main class="main">
     <header class="tool-header">
       <div class="led-row" style="margin-bottom:8px;">
-        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
       </div>
       <h1>JSON to CSV Converter</h1>
-      <p>Paste JSON below. Conversion happens in this tab â€” your data is never sent anywhere.</p>
+      <p>Paste JSON below. Conversion happens in this tab — your data is never sent anywhere.</p>
     </header>
 
     <div class="field">
@@ -85,7 +89,7 @@
 
     <section class="faq">
       <h3>How this works</h3>
-      <p>The converter reads your JSON directly in JavaScript, flattens the top-level keys of each object into columns, and writes standard comma-separated rows with proper quoting for commas and quotes inside values. It supports a flat array of objects â€” the most common shape returned by APIs and exports. Nothing is uploaded: you can disconnect from the internet after this page loads and it will still work.</p>
+      <p>The converter reads your JSON directly in JavaScript, flattens the top-level keys of each object into columns, and writes standard comma-separated rows with proper quoting for commas and quotes inside values. It supports a flat array of objects — the most common shape returned by APIs and exports. Nothing is uploaded: you can disconnect from the internet after this page loads and it will still work.</p>
       <h3>Common uses</h3>
       <p>Turning an API response into a spreadsheet, converting export logs for Excel or Google Sheets, or quickly inspecting the shape of a JSON file without writing a script.</p>
     </section>
@@ -130,15 +134,15 @@ function setLed(state, text) {
 document.getElementById('convertBtn').addEventListener('click', () => {
   const raw = document.getElementById('jsonInput').value.trim();
   if (!raw) { output.textContent = 'Paste some JSON first.'; return; }
-  setLed('live', 'processing â€” local');
+  setLed('live', 'processing — local');
   try {
     const parsed = JSON.parse(raw);
     const csv = jsonToCSV(parsed);
     output.textContent = csv || '(empty result)';
-    setLed('done', 'done â€” nothing left this device');
+    setLed('done', 'done — nothing left this device');
   } catch (e) {
     output.textContent = 'Error: ' + e.message;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 

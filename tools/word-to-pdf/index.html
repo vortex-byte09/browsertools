@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Word to PDF â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>Word to PDF — offline, no upload | BrowserTools</title>
 <meta name="description" content="Convert Word (.docx) files to PDF entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,7 +67,7 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
 </div>
 <h1>Word to PDF (.pdf)</h1>
 <p>Convert Word (.docx) files to PDF entirely in this tab. Your document is never uploaded.</p>
@@ -79,7 +83,7 @@
 
 <section class="faq">
 <h3>How this works</h3>
-<p>This tool uses Mammoth.js to convert the Word document to HTML, then uses jsPDF and html2canvas to convert that HTML to a PDF file. All processing happens locally in your browser â€” no upload to a server.</p>
+<p>This tool uses Mammoth.js to convert the Word document to HTML, then uses jsPDF and html2canvas to convert that HTML to a PDF file. All processing happens locally in your browser — no upload to a server.</p>
 <h3>Common uses</h3>
 <p>Converting Word reports, resumes, or letters to PDF for sharing or printing, ensuring the document looks the same on any device.</p>
 </section>
@@ -122,20 +126,20 @@ fileInput.addEventListener('change', async (e) => {
     dropzone.textContent = 'Drop Word files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select a .docx file</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
     return;
   }
   docxData = await readFileAsArrayBuffer(file);
-  dropzone.textContent = `${file.name} â€” ready to convert`;
+  dropzone.textContent = `${file.name} — ready to convert`;
   convertBtn.disabled = false;
   resultArea.innerHTML = '';
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
 });
 
 convertBtn.addEventListener('click', async () => {
   if (!docxData) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Convertingâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
   try {
     // Convert docx to HTML using Mammoth
     const { value: html } = await mammoth.convertToHtml({ arrayBuffer: docxData });
@@ -166,11 +170,11 @@ convertBtn.addEventListener('click', async () => {
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="converted.pdf" style="display:inline-block;margin-top:12px;">Download converted.pdf</a>`;
-    setLed('done', 'done â€” nothing left this device');
+    setLed('done', 'done — nothing left this device');
   } catch (e) {
     console.error(e);
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${e.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

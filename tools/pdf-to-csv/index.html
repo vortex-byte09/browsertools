@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PDF to CSV â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>PDF to CSV — offline, no upload | BrowserTools</title>
 <meta name="description" content="Extract tables from a PDF and save them as a CSV file entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,7 +67,7 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
 </div>
 <h1>PDF to CSV</h1>
 <p>Extract tables from a PDF and save them as a CSV file entirely in this tab. Your file never leaves your device.</p>
@@ -79,7 +83,7 @@
 
 <section class="faq">
 <h3>How this works</h3>
-<p>This tool uses PDF.js to read the PDF file and extracts the text content. It then groups text lines by their vertical position to form rows, and splits rows by multiple spaces to create cells. The resulting grid is written as CSV (commaâ€‘separated values). Everything happens locally in your browser â€” no upload to a server.</p>
+<p>This tool uses PDF.js to read the PDF file and extracts the text content. It then groups text lines by their vertical position to form rows, and splits rows by multiple spaces to create cells. The resulting grid is written as CSV (comma-separated values). Everything happens locally in your browser — no upload to a server.</p>
 <h3>Common uses</h3>
 <p>Pulling data tables out of reports or scanned PDFs for further analysis in spreadsheets, converting financial statements, or extracting survey results from a PDF form.</p>
 </section>
@@ -104,9 +108,9 @@ function setLed(state, text) {
 }
 
 /**
- * Rough table detection: group text items by similar yâ€‘position (within 5â€¯px),
+ * Rough table detection: group text items by similar y-position (within 5?px),
  * then split each line by 2+ spaces to form cells.
- * Returns a 2D array (rows Ã— cells).
+ * Returns a 2D array (rows × cells).
  */
 function extractTableData(pdfDoc) {
   return pdfDoc.getPage(1).then(page => {
@@ -165,21 +169,21 @@ fileInput.addEventListener('change', async (e) => {
   try {
     pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
     convertBtn.disabled = false;
-    dropzone.textContent = `${file.name} â€” ready to convert (${pdfDoc.numPages} pages)`;
-    setLed('done', 'ready â€” local');
+    dropzone.textContent = `${file.name} — ready to convert (${pdfDoc.numPages} pages)`;
+    setLed('done', 'ready — local');
     resultArea.innerHTML = '';
   } catch (err) {
     dropzone.textContent = 'Drop PDF files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Error loading PDF: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 
 convertBtn.addEventListener('click', async () => {
   if (!pdfDoc) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Convertingâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
   try {
     const tableData = await extractTableData(pdfDoc);
     if (!tableData.length) throw new Error('No table data detected on the first page.');
@@ -187,10 +191,10 @@ convertBtn.addEventListener('click', async () => {
     const blob = new Blob([csv], {type:'text/csv'});
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="extracted.csv" style="display:inline-block;margin-top:12px;">Download extracted.csv</a>`;
-    setLed('done', 'done â€” nothing left this device');
+    setLed('done', 'done — nothing left this device');
   } catch (err) {
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

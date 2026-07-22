@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JWT Decoder â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>JWT Decoder — offline, no upload | BrowserTools</title>
 <meta name="description" content="Decode a JSON Web Token's header and payload instantly in your browser. No upload, works offline.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,10 +67,10 @@
   <main class="main">
     <header class="tool-header">
       <div class="led-row" style="margin-bottom:8px;">
-        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
       </div>
       <h1>JWT Decoder</h1>
-      <p>Paste a token to see its header and payload. Decoding happens in this tab only â€” a JWT often carries session data, so it's never sent anywhere.</p>
+      <p>Paste a token to see its header and payload. Decoding happens in this tab only — a JWT often carries session data, so it's never sent anywhere.</p>
     </header>
 
     <div class="field">
@@ -79,13 +83,13 @@
 
     <div class="field" style="margin-top:16px;">
       <label>Header</label>
-      <div id="headerOut" class="output-box">â€”</div>
+      <div id="headerOut" class="output-box">—</div>
     </div>
     <div class="field">
       <label>Payload</label>
-      <div id="payloadOut" class="output-box">â€”</div>
+      <div id="payloadOut" class="output-box">—</div>
     </div>
-    <p style="font-size:12.5px;color:var(--ink-soft);">Signature is not verified here â€” this tool only decodes, it doesn't check whether the token is valid.</p>
+    <p style="font-size:12.5px;color:var(--ink-soft);">Signature is not verified here — this tool only decodes, it doesn't check whether the token is valid.</p>
 
     <section class="faq">
       <h3>How this works</h3>
@@ -120,20 +124,20 @@ document.getElementById('decodeBtn').addEventListener('click', () => {
   const payloadOut = document.getElementById('payloadOut');
   if (!token) { headerOut.textContent = payloadOut.textContent = 'Paste a token first.'; return; }
 
-  setLed('live', 'processing â€” local');
+  setLed('live', 'processing — local');
   const parts = token.split('.');
   if (parts.length < 2) {
     headerOut.textContent = payloadOut.textContent = 'That doesn\'t look like a JWT (expected 3 dot-separated parts).';
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
     return;
   }
   try {
     headerOut.textContent = JSON.stringify(JSON.parse(b64urlDecode(parts[0])), null, 2);
     payloadOut.textContent = JSON.stringify(JSON.parse(b64urlDecode(parts[1])), null, 2);
-    setLed('done', 'done â€” nothing left this device');
+    setLed('done', 'done — nothing left this device');
   } catch (e) {
     headerOut.textContent = payloadOut.textContent = 'Could not decode: ' + e.message;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

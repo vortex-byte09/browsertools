@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Image Compress â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>Image Compress — offline, no upload | BrowserTools</title>
 <meta name="description" content="Compress JPG, PNG, WebP images entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,10 +67,10 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
 </div>
 <h1>Image Compress</h1>
-<p>Compress JPG, PNG, or WebP images to reduce file size while controlling quality. Everything happens in this tab â€” your images never leave your device.</p>
+<p>Compress JPG, PNG, or WebP images to reduce file size while controlling quality. Everything happens in this tab — your images never leave your device.</p>
 </header>
 
 <div id="dropzone" class="dropzone">Drop image files here, or click to choose</div>
@@ -150,7 +154,7 @@ fileInput.addEventListener('change', async (e) => {
     document.getElementById('options').style.display = 'none';
     compressBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select an image file</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
     return;
   }
   const arrayBuffer = await file.arrayBuffer();
@@ -168,12 +172,12 @@ fileInput.addEventListener('change', async (e) => {
     options.style.display = 'block';
     origName.textContent = file.name;
     origSize.textContent = formatBytes(file.size);
-    origDim.textContent = `${img.width} Ã— ${img.height}`;
+    origDim.textContent = `${img.width} × ${img.height}`;
     // Reset quality display
     qualityValue.textContent = qualitySlider.value;
     compressBtn.disabled = false;
     resultArea.innerHTML = '';
-    setLed('done', 'ready â€” local');
+    setLed('done', 'ready — local');
   };
   img.onerror = () => {
     URL.revokeObjectURL(url);
@@ -182,7 +186,7 @@ fileInput.addEventListener('change', async (e) => {
     options.style.display = 'none';
     compressBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Failed to load image</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   };
 });
 
@@ -192,8 +196,8 @@ qualitySlider.addEventListener('input', () => {
 
 compressBtn.addEventListener('click', async () => {
   if (!imageBlob) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing imageâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing image…</p>';
   try {
     const img = new Image();
     img.src = URL.createObjectURL(new Blob([imageBlob]));
@@ -234,11 +238,11 @@ compressBtn.addEventListener('click', async () => {
       }
     </div>
     <a class="btn" href="${url}" download="compressed.${format}" style="display:inline-block;margin-top:8px;">Download compressed image</a>`;
-    setLed('done', 'done â€” left this device');
+    setLed('done', 'done — left this device');
   } catch (err) {
     console.error(err);
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

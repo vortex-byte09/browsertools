@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Audio to Video â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>Audio to Video — offline, no upload | BrowserTools</title>
 <meta name="description" content="Combine an audio file with a static image to create a video file entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,7 +67,7 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
 </div>
 <h1>Audio to Video</h1>
 <p>Combine an audio file with a static image to create a video file (MP4/WebM) entirely in this tab. Your files never leave your device.</p>
@@ -118,8 +122,8 @@ function setLed(state, text) {
 // Lazy load FFmpeg
 async function loadFFmpeg() {
   if (ffmpegReady) return ffmpeg;
-  setLed('live', 'loading FFmpegâ€¦');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)â€¦</p>';
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
   // Create promises for the two scripts
   const ffmpegScript = document.createElement('script');
   ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
@@ -137,7 +141,7 @@ async function loadFFmpeg() {
   ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
   await ffmpeg.load();
   ffmpegReady = true;
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
   resultArea.innerHTML = '';
   return ffmpeg;
 }
@@ -171,19 +175,19 @@ fileInput.addEventListener('change', async (e) => {
     dropzone.textContent = `Ready: audio + image`;
     convertBtn.disabled = false;
     resultArea.innerHTML = '';
-    setLed('done', 'ready â€” local');
+    setLed('done', 'ready — local');
   } else {
     dropzone.textContent = 'Drop audio and image files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please drop one audio file and one image file</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 
 convertBtn.addEventListener('click', async () => {
   if (!audioFile || !imageFile) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Creating videoâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Creating video…</p>';
   try {
     const ffmpegInstance = await loadFFmpeg();
     // Write input files to FFmpeg FS
@@ -214,11 +218,11 @@ convertBtn.addEventListener('click', async () => {
     const blob = new Blob([data.buffer], {type: format === 'mp4' ? 'video/mp4' : 'video/webm'});
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="audio-to-video.${outputExt}" style="display:inline-block;margin-top:12px;">Download audio-to-video.${outputExt}</a>`;
-    setLed('done', 'done â€” left this device');
+    setLed('done', 'done — left this device');
   } catch (err) {
     console.error(err);
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

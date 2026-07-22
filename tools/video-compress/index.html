@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Video Compress â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>Video Compress — offline, no upload | BrowserTools</title>
 <meta name="description" content="Compress video files (reduce file size) entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,10 +67,10 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
 </div>
 <h1>Video Compress</h1>
-<p>Compress video files to reduce size while maintaining quality. Processing happens entirely in this tab â€” no upload.</p>
+<p>Compress video files to reduce size while maintaining quality. Processing happens entirely in this tab — no upload.</p>
 </header>
 
 <div id="dropzone" class="dropzone">Drop video files here, or click to choose</div>
@@ -87,7 +91,7 @@
 
 <section class="faq">
 <h3>How this works</h3>
-<p>This tool uses ffmpeg.wasm to re-encode the video with the libx264 codec, adjusting the Constant Rate Factor (CRF) to control quality. Lower CRF means better quality but larger file size; higher CRF means more compression. The audio is re-encoded to AAC at 128 kbps. All processing happens locally â€” no upload to a server.</p>
+<p>This tool uses ffmpeg.wasm to re-encode the video with the libx264 codec, adjusting the Constant Rate Factor (CRF) to control quality. Lower CRF means better quality but larger file size; higher CRF means more compression. The audio is re-encoded to AAC at 128 kbps. All processing happens locally — no upload to a server.</p>
 <h3>Common uses</h3>
 <p>Shrinking video files for email attachment, reducing size for web uploads, or saving space on your device while keeping acceptable quality.</p>
 </section>
@@ -116,8 +120,8 @@ function setLed(state, text) {
 // Lazy load FFmpeg
 async function loadFFmpeg() {
   if (ffmpegReady) return ffmpeg;
-  setLed('live', 'loading FFmpegâ€¦');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)â€¦</p>';
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
   const ffmpegScript = document.createElement('script');
   ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
   ffmpegScript.type = 'module';
@@ -132,7 +136,7 @@ async function loadFFmpeg() {
   ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
   await ffmpeg.load();
   ffmpegReady = true;
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
   resultArea.innerHTML = '';
   return ffmpeg;
 }
@@ -154,21 +158,21 @@ fileInput.addEventListener('change', async (e) => {
     dropzone.textContent = 'Drop video files here, or click to choose';
     compressBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select a video file</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
     return;
   }
   const buffer = await readFileAsArrayBuffer(file);
   videoFile = {name: file.name, buffer, size: file.size};
-  dropzone.textContent = `${file.name} â€” ready to compress`;
+  dropzone.textContent = `${file.name} — ready to compress`;
   compressBtn.disabled = false;
   resultArea.innerHTML = '';
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
 });
 
 compressBtn.addEventListener('click', async () => {
   if (!videoFile) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing videoâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing video…</p>';
   try {
     const ffmpegInstance = await loadFFmpeg();
     const inName = videoFile.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
@@ -192,11 +196,11 @@ compressBtn.addEventListener('click', async () => {
     const blob = new Blob([data.buffer], {type: 'video/mp4'});
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="${outName}" style="display:inline-block;margin-top:12px;">Download ${outName}</a>`;
-    setLed('done', 'done â€” left this device');
+    setLed('done', 'done — left this device');
   } catch (err) {
     console.error(err);
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

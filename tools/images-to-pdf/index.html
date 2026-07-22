@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Images to PDF â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>Images to PDF — offline, no upload | BrowserTools</title>
 <meta name="description" content="Convert one or more image files (PNG/JPG) to a single PDF file entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,7 +67,7 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
 </div>
 <h1>Images to PDF</h1>
 <p>Combine multiple image files (PNG, JPG) into a single PDF document entirely in this tab. Your images never leave your device.</p>
@@ -79,7 +83,7 @@
 
 <section class="faq">
 <h3>How this works</h3>
-<p>This tool uses the jsPDF library. Each selected image is added as a separate page, scaled to fit the page while preserving aspect ratio. All processing happens locally in your browser â€” no upload to a server.</p>
+<p>This tool uses the jsPDF library. Each selected image is added as a separate page, scaled to fit the page while preserving aspect ratio. All processing happens locally in your browser — no upload to a server.</p>
 <h3>Common uses</h3>
 <p>Creating a PDF portfolio of screenshots, turning a set of scanned pages into a searchable PDF (after OCR elsewhere), or assembling photos for a printable booklet.</p>
 </section>
@@ -120,7 +124,7 @@ fileInput.addEventListener('change', async (e) => {
     dropzone.textContent = 'Drop image files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select PNG or JPG files</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
     return;
   }
   images = [];
@@ -128,16 +132,16 @@ fileInput.addEventListener('change', async (e) => {
     const blob = await readFileAsBlob(f);
     images.push({name: f.name, blob});
   }
-  dropzone.textContent = `${valid.length} image${valid.length>1?'s':''} â€” ready to convert`;
+  dropzone.textContent = `${valid.length} image${valid.length>1?'s':''} — ready to convert`;
   convertBtn.disabled = false;
   resultArea.innerHTML = '';
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
 });
 
 convertBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Convertingâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({unit:'pt', format:'a4'});
@@ -171,10 +175,10 @@ convertBtn.addEventListener('click', async () => {
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="combined.pdf" style="display:inline-block;margin-top:12px;">Download combined.pdf</a>`;
-    setLed('done', 'done â€” nothing left this device');
+    setLed('done', 'done — nothing left this device');
   } catch (err) {
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

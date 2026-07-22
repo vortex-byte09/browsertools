@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PDF to Images â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>PDF to Images — offline, no upload | BrowserTools</title>
 <meta name="description" content="Export every page of a PDF as a PNG or JPG image, entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
@@ -69,10 +73,10 @@
   <main class="main">
     <header class="tool-header">
       <div class="led-row" style="margin-bottom:8px;">
-        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
       </div>
       <h1>PDF to Images</h1>
-      <p>Turn each page into a downloadable PNG or JPG. Rendering happens in this tab â€” the PDF is never uploaded.</p>
+      <p>Turn each page into a downloadable PNG or JPG. Rendering happens in this tab — the PDF is never uploaded.</p>
     </header>
 
     <div id="dropzone" class="dropzone">Drop a PDF here, or click to choose</div>
@@ -86,9 +90,9 @@
       </select>
       <label style="margin-top:12px;">Resolution</label>
       <select id="scaleSelect" style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;background:var(--panel);color:var(--ink);">
-        <option value="1">1x â€” screen quality</option>
-        <option value="2" selected>2x â€” print quality</option>
-        <option value="3">3x â€” high resolution</option>
+        <option value="1">1x — screen quality</option>
+        <option value="2" selected>2x — print quality</option>
+        <option value="3">3x — high resolution</option>
       </select>
     </div>
 
@@ -144,13 +148,13 @@ dropzone.addEventListener('drop', (e) => {
 async function handleFile(file) {
   if (!file || file.type !== 'application/pdf') return;
   pdfBuf = await file.arrayBuffer();
-  dropzone.textContent = file.name + ' â€” ready to convert';
+  dropzone.textContent = file.name + ' — ready to convert';
   convertBtn.disabled = false;
 }
 
 convertBtn.addEventListener('click', async () => {
   if (!pdfBuf) return;
-  setLed('live', 'processing â€” local');
+  setLed('live', 'processing — local');
   pagesEl.innerHTML = '';
   downloadAllBtn.style.display = 'none';
   renderedImages = [];
@@ -196,10 +200,10 @@ convertBtn.addEventListener('click', async () => {
     }
 
     if (renderedImages.length > 1) downloadAllBtn.style.display = 'inline-block';
-    setLed('done', 'done â€” nothing left this device');
+    setLed('done', 'done — nothing left this device');
   } catch (e) {
     pageCountEl.textContent = 'Error: ' + e.message;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 

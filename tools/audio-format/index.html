@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Audio Format Converter â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>Audio Format Converter — offline, no upload | BrowserTools</title>
 <meta name="description" content="Convert audio files between MP3, WAV, OGG, M4A/AAC, FLAC entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,10 +67,10 @@
   <main class="main">
     <header class="tool-header">
       <div class="led-row" style="margin-bottom:8px;">
-        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
       </div>
       <h1>Audio Format Converter</h1>
-      <p>Convert audio files between MP3, WAV, OGG, M4A/AAC, FLAC. Processing happens entirely in this tab â€” no upload.</p>
+      <p>Convert audio files between MP3, WAV, OGG, M4A/AAC, FLAC. Processing happens entirely in this tab — no upload.</p>
     </header>
 
     <div id="dropzone" class="dropzone">Drop audio files here, or click to choose</div>
@@ -97,7 +101,7 @@
 
     <section class="faq">
       <h3>How this works</h3>
-      <p>This tool uses ffmpeg.wasm to run FFmpeg in the browser. It decodes the input audio and re-encodes it to the selected format with the chosen bitrate (where applicable). All processing happens locally â€” no upload to a server.</p>
+      <p>This tool uses ffmpeg.wasm to run FFmpeg in the browser. It decodes the input audio and re-encodes it to the selected format with the chosen bitrate (where applicable). All processing happens locally — no upload to a server.</p>
       <h3>Common uses</h3>
       <p>Converting podcasts to MP3 for compatibility, saving voice memos as FLAC for archival, preparing audio for web use (OGG), or extracting audio from video files to a specific format.</p>
     </section>
@@ -127,8 +131,8 @@ function setLed(state, text) {
 // Lazy load FFmpeg
 async function loadFFmpeg() {
   if (ffmpegReady) return ffmpeg;
-  setLed('live', 'loading FFmpegâ€¦');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)â€¦</p>';
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
   const ffmpegScript = document.createElement('script');
   ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
   ffmpegScript.type = 'module';
@@ -143,7 +147,7 @@ async function loadFFmpeg() {
   ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
   await ffmpeg.load();
   ffmpegReady = true;
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
   resultArea.innerHTML = '';
   return ffmpeg;
 }
@@ -165,21 +169,21 @@ fileInput.addEventListener('change', async (e) => {
     dropzone.textContent = 'Drop audio files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select an audio file</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
     return;
   }
   const buffer = await readFileAsArrayBuffer(file);
   audioFile = {name: file.name, buffer, size: file.size, type: file.type};
-  dropzone.textContent = `${file.name} â€” ready to convert`;
+  dropzone.textContent = `${file.name} — ready to convert`;
   convertBtn.disabled = false;
   resultArea.innerHTML = '';
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
 });
 
 convertBtn.addEventListener('click', async () => {
   if (!audioFile) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting audioâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting audio…</p>';
   try {
     const ffmpegInstance = await loadFFmpeg();
     const inName = audioFile.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
@@ -213,11 +217,11 @@ convertBtn.addEventListener('click', async () => {
     const blob = new Blob([data.buffer], {type: mimeType});
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="${outName}" style="display:inline-block;margin-top:12px;">Download ${outName}</a>`;
-    setLed('done', 'done â€” left this device');
+    setLed('done', 'done — left this device');
   } catch (err) {
     console.error(err);
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>

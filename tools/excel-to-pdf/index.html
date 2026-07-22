@@ -1,9 +1,13 @@
-ï»¿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Excel to PDF â€” offline, no upload | BrowserTools</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<title>Excel to PDF — offline, no upload | BrowserTools</title>
 <meta name="description" content="Convert Excel (.xlsx) workbooks to PDF entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -63,7 +67,7 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready â€” local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
 </div>
 <h1>Excel to PDF (.pdf)</h1>
 <p>Convert Excel workbooks to PDF entirely in this tab. Your file never leaves your device.</p>
@@ -84,7 +88,7 @@
 
 <section class="faq">
 <h3>How this works</h3>
-<p>This tool uses SheetJS to read the Excel workbook, converts each worksheet to an HTML table, and then uses jsPDF with the autotable plugin to render those tables into a PDF file. All processing happens locally in your browser â€” no upload to a server.</p>
+<p>This tool uses SheetJS to read the Excel workbook, converts each worksheet to an HTML table, and then uses jsPDF with the autotable plugin to render those tables into a PDF file. All processing happens locally in your browser — no upload to a server.</p>
 <h3>Common uses</h3>
 <p>Sharing Excel reports as PDF for printing or archiving, converting spreadsheets for email attachments, or creating printable versions of financial statements.</p>
 </section>
@@ -128,20 +132,20 @@ fileInput.addEventListener('change', async (e) => {
     dropzone.textContent = 'Drop Excel files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select a .xlsx file</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
     return;
   }
   workbook = await readFileAsArrayBuffer(file);
-  dropzone.textContent = `${file.name} â€” ready to convert`;
+  dropzone.textContent = `${file.name} — ready to convert`;
   convertBtn.disabled = false;
   resultArea.innerHTML = '';
-  setLed('done', 'ready â€” local');
+  setLed('done', 'ready — local');
 });
 
 convertBtn.addEventListener('click', async () => {
   if (!workbook) return;
-  setLed('live', 'processing â€” local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Convertingâ€¦</p>';
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({unit:'pt', format:'a4'});
@@ -180,10 +184,10 @@ convertBtn.addEventListener('click', async () => {
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="converted.pdf" style="display:inline-block;margin-top:12px;">Download converted.pdf</a>`;
-    setLed('done', 'done â€” nothing left this device');
+    setLed('done', 'done — nothing left this device');
   } catch (err) {
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready â€” local');
+    setLed('idle', 'ready — local');
   }
 });
 </script>
