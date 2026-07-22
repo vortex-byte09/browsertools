@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Root pages -->
+  <url>
+    <loc>https://www.browsertoolkit.me/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/about.html</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/privacy.html</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+
+  <!-- PDF suite -->
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-merge/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-to-images/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-compress/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-to-word/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/word-to-pdf/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-to-excel/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/excel-to-pdf/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/images-to-pdf/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-to-csv/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/csv-to-pdf/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-to-txt/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/pdf-utils/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+
+  <!-- Media suite -->
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/video-to-audio/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/audio-to-video/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/video-to-gif/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/video-compress/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/image-compress/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+
+  <!-- Audio suite -->
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/audio-trim/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/audio-format/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/audio-merge/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/audio-volume/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/audio-compress/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+
+  <!-- Dev & Security suite -->
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/json-to-csv/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/jwt-decoder/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://www.browsertoolkit.me/tools/regex-tester/</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+
+</urlset>
