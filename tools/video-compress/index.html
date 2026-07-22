@@ -1,0 +1,186 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Compress — offline, no upload | BrowserTools</title>
+<meta name="description" content="Compress video files (reduce file size) entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+<h4>Media</h4>
+<ul>
+  <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+  <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+  <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+  <li><a href="/tools/video-compress/" class="active">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+</ul>
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>Video Compress</h1>
+<p>Compress video files to reduce size while maintaining quality. Processing happens entirely in this tab — no upload.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop video files here, or click to choose</div>
+<div class="label">Choose file</div>
+<input type="file" id="fileInput" accept="video/*" style="display:none;">
+<div class="field" style="margin-top:16px;">
+  <label for="qualitySlider">Compression level</label>
+  <input type="range" id="qualitySlider" min="1" max="3" value="2" step="1" style="width:100%;max-width:320px;">
+  <div style="display:flex;justify-content:space-between;max-width:320px;font-size:11.5px;color:var(--ink-soft);">
+    <span>Smaller file</span><span>Balanced</span><span>Higher quality</span>
+  </div>
+</div>
+
+<button class="btn" id="compressBtn" disabled>Compress Video</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses ffmpeg.wasm to re-encode the video with the libx264 codec, adjusting the Constant Rate Factor (CRF) to control quality. Lower CRF means better quality but larger file size; higher CRF means more compression. The audio is re-encoded to AAC at 128 kbps. All processing happens locally — no upload to a server.</p>
+<h3>Common uses</h3>
+<p>Shrinking video files for email attachment, reducing size for web uploads, or saving space on your device while keeping acceptable quality.</p>
+</section>
+
+</main>
+</div>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const qualitySlider = document.getElementById('qualitySlider');
+const compressBtn = document.getElementById('compressBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let videoFile = null;
+let ffmpeg = null;
+let ffmpegReady = false;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+// Lazy load FFmpeg
+async function loadFFmpeg() {
+  if (ffmpegReady) return ffmpeg;
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
+  const ffmpegScript = document.createElement('script');
+  ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
+  ffmpegScript.type = 'module';
+  const coreScript = document.createElement('script');
+  coreScript.src = 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js';
+  coreScript.type = 'module';
+  await Promise.all([
+    new Promise((resolve, reject) => { ffmpegScript.onload = resolve; ffmpegScript.onerror = reject; document.head.appendChild(ffmpegScript); }),
+    new Promise((resolve, reject) => { coreScript.onload = resolve; coreScript.onerror = reject; document.head.appendChild(coreScript); })
+  ]);
+  const { FFmpeg } = window.FFmpeg;
+  ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
+  await ffmpeg.load();
+  ffmpegReady = true;
+  setLed('done', 'ready — local');
+  resultArea.innerHTML = '';
+  return ffmpeg;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('video/')) {
+    dropzone.textContent = 'Drop video files here, or click to choose';
+    compressBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please select a video file</p>`;
+    setLed('idle', 'ready — local');
+    return;
+  }
+  const buffer = await readFileAsArrayBuffer(file);
+  videoFile = {name: file.name, buffer, size: file.size};
+  dropzone.textContent = `${file.name} — ready to compress`;
+  compressBtn.disabled = false;
+  resultArea.innerHTML = '';
+  setLed('done', 'ready — local');
+});
+
+compressBtn.addEventListener('click', async () => {
+  if (!videoFile) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing video…</p>';
+  try {
+    const ffmpegInstance = await loadFFmpeg();
+    const inName = videoFile.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+    await ffmpegInstance.FS('writeFile', inName, new Uint8Array(videoFile.buffer));
+    const level = parseInt(qualitySlider.value, 10);
+    // Map level 1-3 to CRF values: lower CRF = better quality
+    // We'll use: 1 -> 28 (more compression), 2 -> 23 (default), 3 -> 18 (high quality)
+    const crfValues = [28, 23, 18];
+    const crf = crfValues[level - 1];
+    const outName = 'output.mp4';
+    await ffmpegInstance.run(
+      '-i', inName,
+      '-c:v', 'libx264',
+      '-crf', crf.toString(),
+      '-preset', 'medium',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      outName
+    );
+    const data = await ffmpegInstance.FS('readFile', outName);
+    const blob = new Blob([data.buffer], {type: 'video/mp4'});
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="${outName}" style="display:inline-block;margin-top:12px;">Download ${outName}</a>`;
+    setLed('done', 'done — left this device');
+  } catch (err) {
+    console.error(err);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

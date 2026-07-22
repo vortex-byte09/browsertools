@@ -1,0 +1,197 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video to GIF — offline, no upload | BrowserTools</title>
+<meta name="description" content="Convert a video to an animated GIF entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+<h4>Media</h4>
+<ul>
+  <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+  <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+  <li><a href="/tools/video-to-gif/" class="active">Video to GIF</a></li>
+  <li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+</ul>
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>Video to GIF</h1>
+<p>Convert a video to an animated GIF entirely in this tab. Your video never leaves your device.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop video files here, or click to choose</div>
+<input type="file" id="fileInput" accept="video/*" style="display:none;">
+
+<div class="options" style="margin-top:16px;">
+<div class="field">
+<label>Start time (seconds)</label>
+<input type="number" id="startInput" value="0" min="0" step="0.1" style="width:100%;max-width:100px;">
+</div>
+<div class="field" style="margin-top:8px;">
+<label>Duration (seconds)</label>
+<input type="number" id="durationInput" value="3" min="0.1" step="0.1" style="width:100%;max-width:100px;">
+</div>
+<div class="field" style="margin-top:8px;">
+<label>Frames per second (FPS)</label>
+<input type="number" id="fpsInput" value="12" min="5" max="30" style="width:100%;max-width:100px;">
+</div>
+<div class="field" style="margin-top:8px;">
+<label>Max width (px)</label>
+<input type="number" id="widthInput" value="320" min="100" max="800" step="10" style="width:100%;max-width:100px;">
+</div>
+</div>
+
+<button class="btn" id="convertBtn" disabled>Convert to GIF</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses ffmpeg.wasm to run FFmpeg in the browser. It extracts a segment from the video, resizes frames, and encodes them as a GIF using a palette for better quality. All processing happens locally — no upload to a server.</p>
+<h3>Common uses</h3>
+<p>Creating short looping animations from video clips for social media, tutorials, or sharing funny moments.</p>
+</section>
+
+</main>
+</div>
+
+<!-- Load FFmpeg only when needed -->
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const startInput = document.getElementById('startInput');
+const durationInput = document.getElementById('durationInput');
+const fpsInput = document.getElementById('fpsInput');
+const widthInput = document.getElementById('widthInput');
+const convertBtn = document.getElementById('convertBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let videoFile = null;
+let ffmpeg = null;
+let ffmpegReady = false;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+// Lazy load FFmpeg
+async function loadFFmpeg() {
+  if (ffmpegReady) return ffmpeg;
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
+  const ffmpegScript = document.createElement('script');
+  ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
+  ffmpegScript.type = 'module';
+  const coreScript = document.createElement('script');
+  coreScript.src = 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js';
+  coreScript.type = 'module';
+  await Promise.all([
+    new Promise((resolve, reject) => { ffmpegScript.onload = resolve; ffmpegScript.onerror = reject; document.head.appendChild(ffmpegScript); }),
+    new Promise((resolve, reject) => { coreScript.onload = resolve; coreScript.onerror = reject; document.head.appendChild(coreScript); })
+  ]);
+  const { FFmpeg } = window.FFmpeg;
+  ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
+  await ffmpeg.load();
+  ffmpegReady = true;
+  setLed('done', 'ready — local');
+  resultArea.innerHTML = '';
+  return ffmpeg;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+dropzone.addEventListener('clickEventListener('click', fileInput.click(() => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('video/')) {
+    dropzone.textContent = 'Drop video files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please select a video file</p>`;
+    setLed('idle', 'ready — local');
+    return;
+  }
+  const buffer = await readFileAsArrayBuffer(file);
+  videoFile = {name: file.name, buffer};
+  dropzone.textContent = `${file.name} — ready to convert`;
+  convertBtn.disabled = false;
+  resultArea.innerHTML = '';
+  setLed('done', 'ready — local');
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!videoFile) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting to GIF…</p>';
+  try {
+    const ffmpegInstance = await loadFFmpeg();
+    const inName = videoFile.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+    await ffmpegInstance.FS('writeFile', inName, new Uint8Array(videoFile.buffer));
+    const start = parseFloat(startInput.value) || 0;
+    const duration = parseFloat(durationInput.value) || 3;
+    const fps = parseInt(fpsInput.value, 10) || 12;
+    const width = parseInt(widthInput.value, 10) || 320;
+    const outName = 'output.gif';
+    // First pass: generate palette
+    const palette = 'palette.png';
+    const filters = `fps=${fps},scale=${width}:-1:flags=lanczos`;
+    await ffmpegInstance.run('-i', inName, '-vf', `${filters},palettegen`, '-y', palette);
+    // Second pass: use palette to generate GIF
+    await ffmpegInstance.run('-i', inName, '-i', palette, '-lavfi', `${filters} [x]; [x][1:v] paletteuse`, '-y', outName);
+    const data = await ffmpegInstance.FS('readFile', outName);
+    const blob = new Blob([data.buffer], {type: 'image/gif'});
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="${outName}" style="display:inline-block;margin-top:12px;">Download ${outName}</a>`;
+    setLed('done', 'done — left this device');
+  } catch (err) {
+    console.error(err);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

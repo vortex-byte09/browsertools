@@ -1,0 +1,175 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Excel to PDF — offline, no upload | BrowserTools</title>
+<meta name="description" content="Convert Excel (.xlsx) workbooks to PDF entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/" class="active">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+
+    <h4>Media</h4>
+<ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>Excel to PDF (.pdf)</h1>
+<p>Convert Excel workbooks to PDF entirely in this tab. Your file never leaves your device.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop Excel files here, or click to choose</div>
+<input type="file" id="fileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none;">
+
+<div class="field" style="margin-top:16px;">
+<label for="delimiter">Delimiter (default comma)</label>
+<input type="text" id="delimiter" value="," placeholder="e.g. , or ; or tab" style="width:100%;max-width:200px;">
+</div>
+
+<button class="btn" id="convertBtn" disabled>Convert to PDF</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses SheetJS to read the Excel workbook, converts each worksheet to an HTML table, and then uses jsPDF with the autotable plugin to render those tables into a PDF file. All processing happens locally in your browser — no upload to a server.</p>
+<h3>Common uses</h3>
+<p>Sharing Excel reports as PDF for printing or archiving, converting spreadsheets for email attachments, or creating printable versions of financial statements.</p>
+</section>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const delimiterInput = document.getElementById('delimiter');
+const convertBtn = document.getElementById('convertBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let workbook = null;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.xlsx') && file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+    dropzone.textContent = 'Drop Excel files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please select a .xlsx file</p>`;
+    setLed('idle', 'ready — local');
+    return;
+  }
+  workbook = await readFileAsArrayBuffer(file);
+  dropzone.textContent = `${file.name} — ready to convert`;
+  convertBtn.disabled = false;
+  resultArea.innerHTML = '';
+  setLed('done', 'ready — local');
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!workbook) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({unit:'pt', format:'a4'});
+    const wb = XLSX.read(workbook, {type:'array'});
+    const margin = 40; // points
+    const pageWidth = doc.internal.pageSize.getWidth() - 2*margin;
+    let y = margin;
+    wb.SheetNames.forEach(sheetName => {
+      const ws = wb.Sheets[sheetName];
+      // convert sheet to array of arrays (including header)
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if (data.length === 0) return;
+      // add a title for the sheet
+      doc.setFontSize(14);
+      doc.text(sheetName, margin, y);
+      y += 20;
+      // use autotable
+      doc.autoTable({
+        startY: y,
+        head: [data[0]], // first row as header
+        body: data.slice(1),
+        margin: {left:margin, right:margin},
+        theme: 'striped',
+        styles: {fontSize:10, cellPadding:2},
+        headStyles: {fillColor:[66,133,244]},
+        // if table exceeds page height, add a new page
+        didDrawCell: data => {}
+      });
+      y = doc.lastAutoTable.finalY + 20;
+      // if we are near the bottom, add a new page for the next sheet
+      if (y > doc.internal.pageSize.getHeight() - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    });
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="converted.pdf" style="display:inline-block;margin-top:12px;">Download converted.pdf</a>`;
+    setLed('done', 'done — nothing left this device');
+  } catch (err) {
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

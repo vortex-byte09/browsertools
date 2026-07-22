@@ -1,0 +1,208 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio to Video — offline, no upload | BrowserTools</title>
+<meta name="description" content="Combine an audio file with a static image to create a video file entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+<h4>Media</h4>
+<ul>
+<li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+<li><a href="/tools/audio-to-video/" class="active">Audio to Video</a></li>
+<li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+<li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+</ul>
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>Audio to Video</h1>
+<p>Combine an audio file with a static image to create a video file (MP4/WebM) entirely in this tab. Your files never leave your device.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop audio and image files here, or click to choose</div>
+<input type="file" id="fileInput" accept="audio/*,image/*" multiple style="display:none;">
+
+<div class="options" style="margin-top:16px;">
+<label for="format">Output format:</label>
+<select id="format">
+<option value="mp4">MP4 (H.264)</option>
+<option value="webm">WebM (VP9)</option>
+</select>
+</div>
+
+<button class="btn" id="convertBtn" disabled>Create Video</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses ffmpeg.wasm, a WebAssembly port of FFmpeg, to run the command <code>-i audio_input -i image_output -c:v libx264 -pix_fmt yuv420p -r 30 -shortest output.mp4</code> (for MP4) or similar for WebM directly in your browser. The audio and image are loaded into memory, processed, and the resulting video is offered as a download. Nothing is uploaded to a server.</p>
+<h3>Common uses</h3>
+<p>Turning podcasts or audio clips into videos for YouTube, Instagram, or other platforms that require video; creating simple music visualizers with a static image; sharing audio lectures on video platforms.</p>
+</section>
+
+</main>
+</div>
+
+<!-- Load FFmpeg only when needed -->
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const formatSelect = document.getElementById('format');
+const convertBtn = document.getElementById('convertBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let audioFile = null;
+let imageFile = null;
+let ffmpeg = null;
+let ffmpegReady = false;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+// Lazy load FFmpeg
+async function loadFFmpeg() {
+  if (ffmpegReady) return ffmpeg;
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
+  // Create promises for the two scripts
+  const ffmpegScript = document.createElement('script');
+  ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
+  ffmpegScript.type = 'module';
+  const coreScript = document.createElement('script');
+  coreScript.src = 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js';
+  coreScript.type = 'module';
+  // Wait for both to load
+  await Promise.all([
+    new Promise((resolve, reject) => { ffmpegScript.onload = resolve; ffmpegScript.onerror = reject; document.head.appendChild(ffmpegScript); }),
+    new Promise((resolve, reject) => { coreScript.onload = resolve; coreScript.onerror = reject; document.head.appendChild(coreScript); })
+  ]);
+  // Now FFmpeg is available on window
+  const { FFmpeg } = window.FFmpeg;
+  ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
+  await ffmpeg.load();
+  ffmpegReady = true;
+  setLed('done', 'ready — local');
+  resultArea.innerHTML = '';
+  return ffmpeg;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const files = e.target.files;
+  if (!files.length) return;
+  // We expect exactly two files: one audio, one image. We'll let the user drop both at once.
+  // Simple heuristic: first file that matches audio/* is audio, first that matches image/* is image.
+  // Reset selections
+  audioFile = null;
+  imageFile = null;
+  for (const f of files) {
+    if (f.type.startsWith('audio/') && !audioFile) {
+      audioFile = await readFileAsArrayBuffer(f);
+    } else if (f.type.startsWith('image/') && !imageFile) {
+      imageFile = await readFileAsArrayBuffer(f);
+    }
+  }
+  if (audioFile && imageFile) {
+    dropzone.textContent = `Ready: audio + image`;
+    convertBtn.disabled = false;
+    resultArea.innerHTML = '';
+    setLed('done', 'ready — local');
+  } else {
+    dropzone.textContent = 'Drop audio and image files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please drop one audio file and one image file</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!audioFile || !imageFile) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Creating video…</p>';
+  try {
+    const ffmpegInstance = await loadFFmpeg();
+    // Write input files to FFmpeg FS
+    await ffmpegInstance.FS('writeFile', 'audio.input', new Uint8Array(audioFile));
+    await ffmpegInstance.FS('writeFile', 'image.input', new Uint8Array(imageFile));
+    // Determine output format and appropriate codec
+    const format = formatSelect.value;
+    let outputExt = 'mp4';
+    let videoCodec = 'libx264';
+    let pixFmt = 'yuv420p';
+    if (format === 'webm') {
+      outputExt = 'webm';
+      videoCodec = 'libvpx-vp9';
+      pixFmt = 'yuv420p'; // Still valid for webm
+    }
+    // Run ffmpeg command: loop the image, short audio, output video
+    await ffmpegInstance.run(
+      '-i', 'image.input',
+      '-i', 'audio.input',
+      '-c:v', videoCodec,
+      '-pix_fmt', pixFmt,
+      '-r', '30',
+      '-shortest',
+      `output.${outputExt}`
+    );
+    // Read the output file
+    const data = await ffmpegInstance.FS('readFile', `output.${outputExt}`);
+    const blob = new Blob([data.buffer], {type: format === 'mp4' ? 'video/mp4' : 'video/webm'});
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="audio-to-video.${outputExt}" style="display:inline-block;margin-top:12px;">Download audio-to-video.${outputExt}</a>`;
+    setLed('done', 'done — left this device');
+  } catch (err) {
+    console.error(err);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

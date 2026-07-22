@@ -1,0 +1,178 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF to Word (.docx) — offline, no upload | BrowserTools</title>
+<meta name="description" content="Convert PDF pages to an editable Word document (.docx) entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/" class="active">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+
+    <h4>Media</h4>
+<ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>PDF to Word (.docx)</h1>
+<p>Convert PDF pages to an editable Word document (.docx) entirely in this tab. Your PDF is never uploaded.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop PDF files here, or click to choose</div>
+<input type="file" id="fileInput" accept="application/pdf" style="display:none;">
+
+<div class="field" style="margin-top:16px;">
+<label for="pageRange">Page range (optional, e.g. 1-5 or 1,3,5)</label>
+<input type="text" id="pageRange" placeholder="Leave blank for all pages" style="width:100%;max-width:320px;">
+</div>
+
+<button class="btn" id="convertBtn" disabled>Convert to Word</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses PDF.js to read the PDF file and extract text from each page. The extracted text is then assembled into a Word document using the docx library. Everything happens locally in your browser — no upload to a server.</p>
+<h3>Common uses</h3>
+<p>Converting scanned reports or PDF forms into an editable Word file, extracting content for further editing, or repurposing PDF content for newsletters and presentations.</p>
+</section>
+
+</main>
+</div>
+
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.0/browser/index.js"></script>
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const convertBtn = document.getElementById('convertBtn');
+const pageRangeInput = document.getElementById('pageRange');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let pdfData = null;
+let pdfDoc = null;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+function parsePageRange(input, maxPages) {
+  if (!input || input.trim() === '') {
+    // return all pages 1-indexed
+    return Array.from({length: maxPages}, (_, i) => i + 1);
+  }
+  const pages = new Set();
+  const parts = input.split(',');
+  for (const part of parts) {
+    const trim = part.trim();
+    if (trim.includes('-')) {
+      const [start, end] = trim.split('-').map(Number);
+      if (!isNaN(start) && !isNaN(end)) {
+        for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
+          if (i >= 1 && i <= maxPages) pages.add(i);
+        }
+      }
+    } else {
+      const num = Number(trim);
+      if (!isNaN(num) && num >= 1 && num <= maxPages) pages.add(num);
+    }
+  }
+  return Array.from(pages).sort((a,b)=>a-b);
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || file.type !== 'application/pdf') return;
+  pdfData = await file.arrayBuffer();
+  try {
+    pdfDoc = await pdfjsLib.getDocument({data: pdfData}).promise;
+    convertBtn.disabled = false;
+    dropzone.textContent = `${file.name} — ready to convert (${pdfDoc.numPages} pages)`;
+    setLed('done', 'ready — local');
+    resultArea.innerHTML = '';
+  } catch (e) {
+    dropzone.textContent = 'Drop PDF files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error loading PDF: ${e.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!pdfDoc) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
+  try {
+    const pageRangeText = pageRangeInput.value;
+    const pagesToConvert = parsePageRange(pageRangeText, pdfDoc.numPages);
+    if (pagesToConvert.length === 0) {
+      throw new Error('No valid pages specified.');
+    }
+    const { Document, Packer, Paragraph, TextRun } = docx;
+    const doc = new Document();
+    for (const pageNum of pagesToConvert) {
+      const page = await pdfDoc.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const items = textContent.items;
+      let line = '';
+      for (const item of items) {
+        if (item.str) {
+          line += item.str;
+        }
+      }
+      const para = new Paragraph();
+      para.addTextRun(new TextRun(line));
+      doc.addParagraph(para);
+    }
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="converted.docx" style="display:inline-block;margin-top:12px;">Download converted.docx</a>`;
+    setLed('done', 'done — nothing left this device');
+  } catch (e) {
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${e.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

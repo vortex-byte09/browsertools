@@ -1,0 +1,163 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word to PDF — offline, no upload | BrowserTools</title>
+<meta name="description" content="Convert Word (.docx) files to PDF entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/" class="active">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+
+    <h4>Media</h4>
+<ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>Word to PDF (.pdf)</h1>
+<p>Convert Word (.docx) files to PDF entirely in this tab. Your document is never uploaded.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop Word files here, or click to choose</div>
+<input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;">
+
+<button class="btn" id="convertBtn" disabled>Convert to PDF</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses Mammoth.js to convert the Word document to HTML, then uses jsPDF and html2canvas to convert that HTML to a PDF file. All processing happens locally in your browser — no upload to a server.</p>
+<h3>Common uses</h3>
+<p>Converting Word reports, resumes, or letters to PDF for sharing or printing, ensuring the document looks the same on any device.</p>
+</section>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/browser/mammoth.browser.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const convertBtn = document.getElementById('convertBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let docxData = null;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.docx') && file.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    dropzone.textContent = 'Drop Word files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please select a .docx file</p>`;
+    setLed('idle', 'ready — local');
+    return;
+  }
+  docxData = await readFileAsArrayBuffer(file);
+  dropzone.textContent = `${file.name} — ready to convert`;
+  convertBtn.disabled = false;
+  resultArea.innerHTML = '';
+  setLed('done', 'ready — local');
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!docxData) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
+  try {
+    // Convert docx to HTML using Mammoth
+    const { value: html } = await mammoth.convertToHtml({ arrayBuffer: docxData });
+    // Optional: wrap HTML in a simple container for styling
+    const htmlWithStyle = `
+      <div style="font-family: Georgia, serif; line-height: 1.6; padding: 20px; max-width: 800px;">
+        ${html}
+      </div>
+    `;
+    // Initialize jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    // Use html method to add HTML to PDF
+    await domtoimage? Wait, we are using html2canvas via jsPDF's html method? Actually jsPDF's html method expects html2canvas to be available globally.
+    // We'll use the html method from jsPDF which internally uses html2canvas.
+    // However, the html method is async and returns a promise? In jsPDF 2.5.1, the html method is asynchronous and returns a promise.
+    // We'll use it as follows:
+    await doc.html(htmlWithStyle, {
+      callback: function(doc) {
+        // Callback when done
+      },
+      x: 15,
+      y: 15,
+      width: 180, // width in mm (A4 width 210 - 2*15 margin)
+      windowWidth: 800 // width of the window in px to apply CSS based on viewport
+    });
+    // Save the PDF
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="converted.pdf" style="display:inline-block;margin-top:12px;">Download converted.pdf</a>`;
+    setLed('done', 'done — nothing left this device');
+  } catch (e) {
+    console.error(e);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${e.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

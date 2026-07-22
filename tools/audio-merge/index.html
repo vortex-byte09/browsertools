@@ -1,0 +1,216 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio Merger/Joiner — offline, no upload | BrowserTools</title>
+<meta name="description" content="Merge multiple audio files into one, in order, entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="sidenav">
+    <div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+    <h4>PDF</h4>
+    <ul>
+      <li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+      <li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+      <li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+      <li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+      <li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+      <li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+      <li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+      <li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+      <li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+      <li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+      <li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+      <li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+    </ul>
+    <h4>Media</h4>
+    <ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+      <li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+    <h4>Audio</h4>
+    <ul>
+      <li><a href="/tools/audio-trim/">Audio Trimmer</a></li>
+      <li><a href="/tools/audio-format/">Audio Format Converter</a></li>
+      <li><a href="/tools/audio-merge/" class="active">Audio Merger</a></li>
+      <li><a href="/tools/audio-volume/">Volume Adjuster</a></li>
+      <li><a href="/tools/audio-compress/">Audio Compressor</a></li>
+    </ul>
+    <h4>Dev &amp; Security</h4>
+    <ul>
+      <li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+      <li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+      <li><a href="/tools/regex-tester/">Regex Tester</a></li>
+    </ul>
+  </nav>
+
+  <main class="main">
+    <header class="tool-header">
+      <div class="led-row" style="margin-bottom:8px;">
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+      </div>
+      <h1>Audio Merger/Joiner</h1>
+      <p>Combine multiple audio files into one, preserving order. Processing happens entirely in this tab — no upload.</p>
+    </header>
+
+    <div id="dropzone" class="dropzone">Drop audio files here, or click to choose (multiple allowed)</div>
+    <input type="file" id="fileInput" accept="audio/*" multiple style="display:none;">
+
+    <div id="fileList" style="margin-top:14px;"></div>
+
+    <button class="btn" id="mergeBtn" disabled style="margin-top:12px;">Merge Audio</button>
+
+
+    <div id="resultArea"></div>
+
+    <section class="faq">
+      <h3>How this works</h3>
+      <p>This tool uses ffmpeg.wasm to run FFmpeg in the browser. It concatenates the input audio files (must be same codec/sample rate or will be re-encoded) and outputs a single file in the format of the first input (or you can specify output format). All processing happens locally — no upload to a server.</p>
+      <h3>Common uses</h3>
+      <p>Combining podcast episodes, joining music tracks, creating audiobooks from chapters, or assembling voice recordings.</p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileListEl = document.getElementById('fileList');
+const mergeBtn = document.getElementById('mergeBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let files = []; // {name, arrayBuffer}
+let ffmpeg = null;
+let ffmpegReady = false;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+// Lazy load FFmpeg
+async function loadFFmpeg() {
+  if (ffmpegReady) return ffmpeg;
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
+  const ffmpegScript = document.createElement('script');
+  ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
+  ffmpegScript.type = 'module';
+  const coreScript = document.createElement('script');
+  coreScript.src = 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js';
+  coreScript.type = 'module';
+  await Promise.all([
+    new Promise((resolve, reject) => { ffmpegScript.onload = resolve; ffmpegScript.onerror = reject; document.head.appendChild(ffmpegScript); }),
+    new Promise((resolve, reject) => { coreScript.onload = resolve; coreScript.onerror = reject; document.head.appendChild(coreScript); })
+  ]);
+  const { FFmpeg } = window.FFmpeg;
+  ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
+  await ffmpeg.load();
+  ffmpegReady = true;
+  setLed('done', 'ready — local');
+  resultArea.innerHTML = '';
+  return ffmpeg;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function renderList() {
+  fileListEl.innerHTML = '';
+  files.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    row.innerHTML = `
+      <span>${i + 1}. ${f.name}</span>
+      <span class="ord">
+        <button data-act="up" data-i="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button data-act="down" data-i="${i}" ${i === files.length - 1 ? 'disabled' : ''}>↓</button>
+        <button data-act="remove" data-i="${i}">✕</button>
+      </span>`;
+    fileListEl.appendChild(row);
+  });
+  mergeBtn.disabled = files.length < 2;
+}
+
+fileListEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const i = Number(btn.dataset.i);
+  if (btn.dataset.act === 'remove') {
+    files.splice(i, 1);
+  } else if (btn.dataset.act === 'up' && i > 0) {
+    [files[i - 1], files[i]] = [files[i], files[i - 1]];
+  } else if (btn.dataset.act === 'down' && i < files.length - 1) {
+    [files[i + 1], files[i]] = [files[i], files[i + 1]];
+  }
+  renderList();
+});
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const fileList = e.target.files;
+  if (!fileList.length) return;
+  for (const file of fileList) {
+    if (!file.type.startsWith('audio/')) continue;
+    const buf = await readFileAsArrayBuffer(file);
+    files.push({name: file.name, buf});
+  }
+  renderList();
+});
+
+mergeBtn.addEventListener('click', async () => {
+  if (files.length < 2) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Merging audio…</p>';
+  try {
+    const ffmpegInstance = await loadFFmpeg();
+    // Write each file to FFmpeg FS with unique names
+    const inNames = [];
+    for (let i = 0; i < files.length; i++) {
+      const safeName = files[i].name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+      const inName = `input_${i}_${safeName}`;
+      await ffmpegInstance.FS('writeFile', inName, new Uint8Array(files[i].buf));
+      inNames.push(inName);
+    }
+    // Create a concat demuxer list
+    const listContent = inNames.map(n => `file '${n}'`).join('\n');
+    await ffmpegInstance.FS('writeFile', 'list.txt', new Uint8Array(new TextEncoder().encode(listContent)));
+    const outName = 'merged.' + files[0].name.split('.').pop(); // use extension of first file
+    await ffmpegInstance.run('-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', outName);
+    const data = await ffmpegInstance.FS('readFile', outName);
+    // Guess mime type from extension
+    const ext = outName.split('.').pop().toLowerCase();
+    let mimeType = 'audio/octet-stream';
+    if (ext === 'mp3') mimeType = 'audio/mpeg';
+    else if (ext === 'wav') mimeType = 'audio/wav';
+    else if (ext === 'ogg') mimeType = 'audio/ogg';
+    else if (ext === 'm4a') mimeType = 'audio/mp4';
+    else if (ext === 'flac') mimeType = 'audio/flac';
+    const blob = new Blob([data.buffer], {type: mimeType});
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="${outName}" style="display:inline-block;margin-top:12px;">Download ${outName}</a>`;
+    setLed('done', 'done — left this device');
+  } catch (err) {
+    console.error(err);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

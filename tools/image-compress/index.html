@@ -1,0 +1,228 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image Compress — offline, no upload | BrowserTools</title>
+<meta name="description" content="Compress JPG, PNG, WebP images entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+<h4>Media</h4>
+<ul>
+  <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+  <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+  <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+  <li><a href="/tools/video-compress/">Video Compress</a></li>
+  <li><a href="/tools/image-compress/" class="active">Image Compress</a></li>
+</ul>
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>Image Compress</h1>
+<p>Compress JPG, PNG, or WebP images to reduce file size while controlling quality. Everything happens in this tab — your images never leave your device.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop image files here, or click to choose</div>
+<input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+<div class="info" id="imageInfo" style="margin-top:16px;display:none;">
+  <div>Original: <span id="origName"></span> (<span id="origSize"></span>)</div>
+  <div>Dimensions: <span id="origDim"></span></div>
+</div>
+
+<div class="options" style="margin-top:16px;display:none;" id="options">
+  <div class="field">
+    <label for="formatSelect">Output format</label>
+    <select id="formatSelect">
+      <option value="jpeg">JPEG</option>
+      <option value="webp">WebP</option>
+      <option value="png">PNG</option>
+    </select>
+  </div>
+  <div class="field" style="margin-top:8px;" id="qualityContainer">
+    <label for="qualitySlider">Quality</label>
+    <input type="range" id="qualitySlider" min="1" max="100" value="80">
+    <span id="qualityValue">80</span>
+  </div>
+</div>
+
+<button class="btn" id="compressBtn" disabled>Compress Image</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool loads the image into an HTML canvas, then re-encodes it using the browser's built-in image encoders (for JPEG, WebP, PNG). You can choose the output format and adjust quality (for JPEG/WebP). The compressed image is offered as a download. No upload to a server occurs.</p>
+<h3>Common uses</h3>
+<p>Reducing file size of photos for faster web loading, shrinking screenshots before sharing, or preparing images for email attachments while preserving acceptable quality.</p>
+</section>
+
+</main>
+</div>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const imageInfo = document.getElementById('imageInfo');
+const origName = document.getElementById('origName');
+const origSize = document.getElementById('origSize');
+const origDim = document.getElementById('origDim');
+const options = document.getElementById('options');
+const formatSelect = document.getElementById('formSelect');
+const qualitySlider = document.getElementById('qualitySlider');
+const qualityValue = document.getElementById('qualityValue');
+const compressBtn = document.getElementById('compressBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let imageBlob = null;
+let imageUrl = null;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    dropzone.textContent = 'Drop image files here, or click to choose';
+    document.getElementById('imageInfo').style.display = 'none';
+    document.getElementById('options').style.display = 'none';
+    compressBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please select an image file</p>`;
+    setLed('idle', 'ready — local');
+    return;
+  }
+  const arrayBuffer = await file.arrayBuffer();
+  imageBlob = new Uint8Array(arrayBuffer);
+  // Create object URL for preview
+  const url = URL.createObjectURL(new Blob([arrayBuffer], {type: file.type}));
+  imageUrl = url;
+  // Update info
+  const img = new Image();
+  img.src = url;
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    imageUrl = null; // we'll keep blob
+    imageInfo.style.display = 'block';
+    options.style.display = 'block';
+    origName.textContent = file.name;
+    origSize.textContent = formatBytes(file.size);
+    origDim.textContent = `${img.width} × ${img.height}`;
+    // Reset quality display
+    qualityValue.textContent = qualitySlider.value;
+    compressBtn.disabled = false;
+    resultArea.innerHTML = '';
+    setLed('done', 'ready — local');
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    dropzone.textContent = 'Drop image files here, or click to choose';
+    imageInfo.style.display = 'none';
+    options.style.display = 'none';
+    compressBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Failed to load image</p>`;
+    setLed('idle', 'ready — local');
+  };
+});
+
+qualitySlider.addEventListener('input', () => {
+  qualityValue.textContent = qualitySlider.value;
+});
+
+compressBtn.addEventListener('click', async () => {
+  if (!imageBlob) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing image…</p>';
+  try {
+    const img = new Image();
+    img.src = URL.createObjectURL(new Blob([imageBlob]));
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    // Determine output format and quality
+    const format = document.getElementById('formatSelect').value;
+    const quality = qualitySlider.value / 100; // 0-1
+    let mimeType;
+    let blob;
+    if (format === 'png') {
+      // PNG is lossless; quality ignored
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    } else if (format === 'jpeg') {
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+    } else if (format === 'webp') {
+      // WebP supports lossy and lossless; we'll use lossy with quality
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
+    }
+    // If blob is null (unsupported), fall back to PNG
+    if (!blob) {
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    }
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<div style="margin-bottom:12px;">
+      Original size: ${formatBytes(imageBlob.length)}<br>
+      Compressed size: ${formatBytes(blob.size)}<br>
+      Change: ${
+        ((blob.size - imageBlob.length) / imageBlob.length * 100).toFixed(1) +
+        '%'
+      }
+    </div>
+    <a class="btn" href="${url}" download="compressed.${format}" style="display:inline-block;margin-top:8px;">Download compressed image</a>`;
+    setLed('done', 'done — left this device');
+  } catch (err) {
+    console.error(err);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

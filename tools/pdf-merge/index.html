@@ -1,0 +1,169 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merge PDFs — offline, no upload | BrowserTools</title>
+<meta name="description" content="Combine multiple PDF files into one, in your chosen order, entirely in your browser. No upload, no file size games.">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  .file-row { display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background: var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:8px 12px; margin-bottom:6px; font-size:13.5px; }
+  .file-row .ord { display:flex; gap:4px; }
+  .file-row button { background:none; border:1px solid var(--line); border-radius:4px; cursor:pointer; padding:2px 8px; font-family:'IBM Plex Mono',monospace; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidenav">
+    <div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+    <h4>PDF</h4>
+    <ul>
+      <li><a href="/tools/pdf-merge/" class="active">Merge PDFs</a></li>
+      <li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+      <li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+      <li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+      <li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+      <li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+      <li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+      <li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+      <li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+      <li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+      <li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+      <li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+    </ul>
+
+    <h4>Media</h4>
+<ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+      <li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+
+<h4>Dev &amp; Security</h4>
+    <ul>
+      <li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+      <li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+      <li><a href="/tools/regex-tester/">Regex Tester</a></li>
+    </ul>
+  </nav>
+
+  <main class="main">
+    <header class="tool-header">
+      <div class="led-row" style="margin-bottom:8px;">
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+      </div>
+      <h1>Merge PDFs</h1>
+      <p>Add files, reorder them, and merge. Your PDFs are read and combined in this tab — none of them are uploaded, so there's no file size limit tied to a server.</p>
+    </header>
+
+    <div id="dropzone" class="dropzone">Drop PDF files here, or click to choose</div>
+    <input type="file" id="fileInput" accept="application/pdf" multiple style="display:none;">
+
+    <div id="fileList" style="margin-top:14px;"></div>
+
+    <button class="btn" id="mergeBtn" disabled style="margin-top:12px;">Merge PDFs</button>
+
+
+    <div id="resultArea"></div>
+
+    <section class="faq">
+      <h3>How this works</h3>
+      <p>This tool uses pdf-lib, a JavaScript library that reads and writes PDF files directly in the browser. When you add files, they're loaded into memory in this tab; merging copies each page, in the order you set, into one new PDF that's then offered back to you as a download. At no point does a file travel to a server.</p>
+      <h3>Common uses</h3>
+      <p>Combining scanned pages into one document, joining a cover letter with a resume, or assembling a set of reports into a single file before sending it on.</p>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileListEl = document.getElementById('fileList');
+const mergeBtn = document.getElementById('mergeBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let files = []; // { name, arrayBuffer }
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+function renderList() {
+  fileListEl.innerHTML = '';
+  files.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    row.innerHTML = `
+      <span>${i + 1}. ${f.name}</span>
+      <span class="ord">
+        <button data-act="up" data-i="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button data-act="down" data-i="${i}" ${i === files.length - 1 ? 'disabled' : ''}>↓</button>
+        <button data-act="remove" data-i="${i}">✕</button>
+      </span>`;
+    fileListEl.appendChild(row);
+  });
+  mergeBtn.disabled = files.length < 2;
+}
+
+fileListEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const i = Number(btn.dataset.i);
+  if (btn.dataset.act === 'remove') files.splice(i, 1);
+  if (btn.dataset.act === 'up' && i > 0) [files[i - 1], files[i]] = [files[i], files[i - 1]];
+  if (btn.dataset.act === 'down' && i < files.length - 1) [files[i + 1], files[i]] = [files[i], files[i + 1]];
+  renderList();
+});
+
+async function addFiles(fileListRaw) {
+  for (const f of fileListRaw) {
+    if (f.type !== 'application/pdf') continue;
+    const buf = await f.arrayBuffer();
+    files.push({ name: f.name, buf });
+  }
+  renderList();
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => addFiles(e.target.files));
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  addFiles(e.dataTransfer.files);
+});
+
+mergeBtn.addEventListener('click', async () => {
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '';
+  try {
+    const { PDFDocument } = PDFLib;
+    const merged = await PDFDocument.create();
+    for (const f of files) {
+      const src = await PDFDocument.load(f.buf);
+      const pages = await merged.copyPages(src, src.getPageIndices());
+      pages.forEach(p => merged.addPage(p));
+    }
+    const bytes = await merged.save();
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="merged.pdf" style="display:inline-block;margin-top:12px;">Download merged.pdf</a>`;
+    setLed('done', 'done — nothing left this device');
+  } catch (e) {
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${e.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF to Plain Text — offline, no upload | BrowserTools</title>
+<meta name="description" content="Extract all text from a PDF file and save it as a plain text (.txt) file entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/" class="active">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+
+    <h4>Media</h4>
+<ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>PDF to Plain Text (.txt)</h1>
+<p>Extract all text from a PDF file and save it as a plain text file entirely in this tab. Your file never leaves your device.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop PDF files here, or click to choose</div>
+<input type="file" id="fileInput" accept="application/pdf" style="display:none;">
+
+<button class="btn" id="convertBtn" disabled>Convert to Text</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses PDF.js to read the PDF file and extracts all text content, preserving the reading order. The text is then offered as a .txt download. Everything happens locally in your browser — no upload to a server.</p>
+<h3>Common uses</h3>
+<p>Converting PDF reports or articles to plain text for easy copying, searching, or processing in other tools, or extracting text from scanned PDFs after OCR.</p>
+</section>
+
+</main>
+</div>
+
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.js"></script>
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const convertBtn = document.getElementById('convertBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let pdfDoc = null;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || file.type !== 'application/pdf') return;
+  const arrayBuffer = await file.arrayBuffer();
+  try {
+    pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    convertBtn.disabled = false;
+    dropzone.textContent = `${file.name} — ready to convert (${pdfDoc.numPages} pages)`;
+    setLed('done', 'ready — local');
+    resultArea.innerHTML = '';
+  } catch (err) {
+    dropzone.textContent = 'Drop PDF files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error loading PDF: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!pdfDoc) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Extracting text…</p>';
+  try {
+    const textChunks = [];
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const textContent = await page.getTextContent();
+      const strings = textContent.items.map(item => item.str);
+      textChunks.push(strings.join(' '));
+    }
+    const fullText = textChunks.join('\n\n');
+    const blob = new Blob([fullText], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="extracted.txt" style="display:inline-block;margin-top:12px;">Download extracted.txt</a>`;
+    setLed('done', 'done — nothing left this device');
+  } catch (err) {
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

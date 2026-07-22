@@ -1,0 +1,192 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compress PDF — offline, no upload | BrowserTools</title>
+<meta name="description" content="Shrink a PDF's file size entirely in your browser, with an adjustable quality level. No upload required.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="sidenav">
+    <div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+    <h4>PDF</h4>
+    <ul>
+      <li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+      <li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+      <li><a href="/tools/pdf-compress/" class="active">Compress PDF</a></li>
+      <li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+      <li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+      <li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+      <li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+      <li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+      <li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+      <li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+      <li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+      <li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+    </ul>
+
+    <h4>Media</h4>
+<ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+
+<h4>Dev &amp; Security</h4>
+    <ul>
+      <li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+      <li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+      <li><a href="/tools/regex-tester/">Regex Tester</a></li>
+    </ul>
+  </nav>
+
+  <main class="main">
+    <header class="tool-header">
+      <div class="led-row" style="margin-bottom:8px;">
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+      </div>
+      <h1>Compress PDF</h1>
+      <p>Reduce a PDF's file size by re-encoding each page at a lower image quality. Runs in this tab — nothing is uploaded.</p>
+    </header>
+
+    <div id="dropzone" class="dropzone">Drop a PDF here, or click to choose</div>
+    <input type="file" id="fileInput" accept="application/pdf" style="display:none;">
+
+    <div class="field" style="margin-top:16px;">
+      <label for="qualitySlider">Compression level</label>
+      <input type="range" id="qualitySlider" min="1" max="3" value="2" step="1" style="width:100%;max-width:320px;">
+      <div style="display:flex;justify-content:space-between;max-width:320px;font-size:11.5px;color:var(--ink-soft);">
+        <span>Smaller file</span><span>Balanced</span><span>Higher quality</span>
+      </div>
+    </div>
+
+    <button class="btn" id="compressBtn" disabled>Compress PDF</button>
+
+
+    <div id="result" style="margin-top:16px;"></div>
+
+    <section class="faq">
+      <h3>How this works</h3>
+      <p>This tool renders each page to an image using pdf.js, re-encodes that image as a JPEG at the quality level you choose, and rebuilds a new PDF from those images with pdf-lib. This is the same technique most online compressors use, and it works especially well on scanned documents or PDFs with large embedded photos. One trade-off: text becomes part of the page image, so it's no longer selectable or searchable in the compressed file — for documents where you need to keep real text, this isn't the right tool.</p>
+      <h3>Common uses</h3>
+      <p>Shrinking a scanned document before emailing it, reducing a photo-heavy report so it fits an upload limit, or archiving large PDFs with less disk space.</p>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const compressBtn = document.getElementById('compressBtn');
+const resultEl = document.getElementById('result');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let pdfBuf = null;
+let originalSize = 0;
+let originalName = 'document.pdf';
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+async function handleFile(file) {
+  if (!file || file.type !== 'application/pdf') return;
+  pdfBuf = await file.arrayBuffer();
+  originalSize = file.size;
+  originalName = file.name.replace(/\.pdf$/i, '');
+  dropzone.textContent = file.name + ' (' + formatBytes(originalSize) + ') — ready to compress';
+  compressBtn.disabled = false;
+  resultEl.innerHTML = '';
+}
+
+compressBtn.addEventListener('click', async () => {
+  if (!pdfBuf) return;
+  setLed('live', 'processing — local');
+  resultEl.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing — this can take a moment for large files…</p>';
+
+  const level = Number(document.getElementById('qualitySlider').value);
+  // level 1 = smaller file: lower scale + lower jpeg quality
+  // level 3 = higher quality: higher scale + higher jpeg quality
+  const settings = {
+    1: { scale: 1.0, quality: 0.55 },
+    2: { scale: 1.3, quality: 0.72 },
+    3: { scale: 1.6, quality: 0.85 }
+  }[level];
+
+  try {
+    const { PDFDocument } = PDFLib;
+    const loadingTask = pdfjsLib.getDocument({ data: pdfBuf.slice(0) });
+    const pdf = await loadingTask.promise;
+    const outDoc = await PDFDocument.create();
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: settings.scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      const jpegDataUrl = canvas.toDataURL('image/jpeg', settings.quality);
+      const jpegBytes = await (await fetch(jpegDataUrl)).arrayBuffer();
+      const img = await outDoc.embedJpg(jpegBytes);
+
+      const ptWidth = viewport.width / settings.scale;
+      const ptHeight = viewport.height / settings.scale;
+      const outPage = outDoc.addPage([ptWidth, ptHeight]);
+      outPage.drawImage(img, { x: 0, y: 0, width: ptWidth, height: ptHeight });
+    }
+
+    const outBytes = await outDoc.save();
+    const newSize = outBytes.byteLength;
+    const blob = new Blob([outBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
+    const pct = originalSize > 0 ? Math.round((1 - newSize / originalSize) * 100) : 0;
+    const pctLabel = pct > 0 ? `${pct}% smaller` : `${Math.abs(pct)}% larger (original was already efficient)`;
+
+    resultEl.innerHTML = `
+      <div class="output-box" style="margin-bottom:10px;">
+Original: ${formatBytes(originalSize)}
+Compressed: ${formatBytes(newSize)}
+${pctLabel}
+      </div>
+      <a class="btn" href="${url}" download="${originalName}-compressed.pdf">Download compressed PDF</a>
+    `;
+    setLed('done', 'done — nothing left this device');
+  } catch (e) {
+    resultEl.innerHTML = `<p style="color:#B3261E;">Error: ${e.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

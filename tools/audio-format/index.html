@@ -1,0 +1,215 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio Format Converter — offline, no upload | BrowserTools</title>
+<meta name="description" content="Convert audio files between MP3, WAV, OGG, M4A/AAC, FLAC entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="sidenav">
+    <div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+    <h4>PDF</h4>
+    <ul>
+      <li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+      <li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+      <li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+      <li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+      <li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+      <li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+      <li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+      <li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+      <li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+      <li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+      <li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+      <li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+    </ul>
+    <h4>Media</h4>
+    <ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+      <li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+    <h4>Audio</h4>
+    <ul>
+      <li><a href="/tools/audio-trim/">Audio Trimmer</a></li>
+      <li><a href="/tools/audio-format/" class="active">Audio Format Converter</a></li>
+      <li><a href="/tools/audio-merge/">Audio Merger</a></li>
+      <li><a href="/tools/audio-volume/">Volume Adjuster</a></li>
+      <li><a href="/tools/audio-compress/">Audio Compressor</a></li>
+    </ul>
+    <h4>Dev &amp; Security</h4>
+    <ul>
+      <li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+      <li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+      <li><a href="/tools/regex-tester/">Regex Tester</a></li>
+    </ul>
+  </nav>
+
+  <main class="main">
+    <header class="tool-header">
+      <div class="led-row" style="margin-bottom:8px;">
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+      </div>
+      <h1>Audio Format Converter</h1>
+      <p>Convert audio files between MP3, WAV, OGG, M4A/AAC, FLAC. Processing happens entirely in this tab — no upload.</p>
+    </header>
+
+    <div id="dropzone" class="dropzone">Drop audio files here, or click to choose</div>
+    <input type="file" id="fileInput" accept="audio/*" style="display:none;">
+
+    <div class="options" style="margin-top:16px;">
+      <div class="field">
+        <label>Output format</label>
+        <select id="formatSelect">
+          <option value="mp3">MP3</option>
+          <option value="wav">WAV</option>
+          <option value="ogg">OGG</option>
+          <option value="m4a">M4A / AAC</option>
+          <option value="flac">FLAC</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:8px;">
+        <label>Bitrate (kbps) - for lossy formats</label>
+        <input type="number" id="bitrateInput" value="128" min="32" max="320" step="8" style="width:100%;max-width:100px;">
+        <span id="bitrateHint" style="font-size:12px;color:var(--ink-soft);display:block;margin-top:4px;">Ignored for WAV/FLAC</span>
+      </div>
+    </div>
+
+    <button class="btn" id="convertBtn" disabled>Convert Audio</button>
+
+
+    <div id="resultArea"></div>
+
+    <section class="faq">
+      <h3>How this works</h3>
+      <p>This tool uses ffmpeg.wasm to run FFmpeg in the browser. It decodes the input audio and re-encodes it to the selected format with the chosen bitrate (where applicable). All processing happens locally — no upload to a server.</p>
+      <h3>Common uses</h3>
+      <p>Converting podcasts to MP3 for compatibility, saving voice memos as FLAC for archival, preparing audio for web use (OGG), or extracting audio from video files to a specific format.</p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const formatSelect = document.getElementById('formatSelect');
+const bitrateInput = document.getElementById('bitrateInput');
+const convertBtn = document.getElementById('convertBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let audioFile = null;
+let ffmpeg = null;
+let ffmpegReady = false;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+// Lazy load FFmpeg
+async function loadFFmpeg() {
+  if (ffmpegReady) return ffmpeg;
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
+  const ffmpegScript = document.createElement('script');
+  ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
+  ffmpegScript.type = 'module';
+  const coreScript = document.createElement('script');
+  coreScript.src = 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js';
+  coreScript.type = 'module';
+  await Promise.all([
+    new Promise((resolve, reject) => { ffmpegScript.onload = resolve; ffmpegScript.onerror = reject; document.head.appendChild(ffmpegScript); }),
+    new Promise((resolve, reject) => { coreScript.onload = resolve; coreScript.onerror = reject; document.head.appendChild(coreScript); })
+  ]);
+  const { FFmpeg } = window.FFmpeg;
+  ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
+  await ffmpeg.load();
+  ffmpegReady = true;
+  setLed('done', 'ready — local');
+  resultArea.innerHTML = '';
+  return ffmpeg;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('audio/')) {
+    dropzone.textContent = 'Drop audio files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please select an audio file</p>`;
+    setLed('idle', 'ready — local');
+    return;
+  }
+  const buffer = await readFileAsArrayBuffer(file);
+  audioFile = {name: file.name, buffer, size: file.size, type: file.type};
+  dropzone.textContent = `${file.name} — ready to convert`;
+  convertBtn.disabled = false;
+  resultArea.innerHTML = '';
+  setLed('done', 'ready — local');
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!audioFile) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting audio…</p>';
+  try {
+    const ffmpegInstance = await loadFFmpeg();
+    const inName = audioFile.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+    await ffmpegInstance.FS('writeFile', inName, new Uint8Array(audioFile.buffer));
+
+    const format = formatSelect.value;
+    let outExt = format;
+    if (format === 'm4a') outExt = 'm4a'; // ffmpeg will use aac codec
+    const outName = 'converted.' + outExt;
+    const args = ['-i', inName];
+    if (format === 'mp3' || format === 'ogg' || format === 'm4a') {
+      const bitrate = parseInt(bitrateInput.value, 10);
+      if (!isNaN(bitrate) && bitrate > 0) {
+        args.push('-b:a', bitrate + 'k');
+      }
+    } else if (format === 'wav') {
+      // wav default is PCM 16-bit; could add options but keep simple
+    } else if (format === 'flac') {
+      // flac default compression
+    }
+    args.push(outName);
+    await ffmpegInstance.run(...args);
+    const data = await ffmpegInstance.FS('readFile', outName);
+    // Determine mime type
+    let mimeType = 'audio/octet-stream';
+    if (format === 'mp3') mimeType = 'audio/mpeg';
+    else if (format === 'wav') mimeType = 'audio/wav';
+    else if (format === 'ogg') mimeType = 'audio/ogg';
+    else if (format === 'm4a') mimeType = 'audio/mp4';
+    else if (format === 'flac') mimeType = 'audio/flac';
+    const blob = new Blob([data.buffer], {type: mimeType});
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="${outName}" style="display:inline-block;margin-top:12px;">Download ${outName}</a>`;
+    setLed('done', 'done — left this device');
+  } catch (err) {
+    console.error(err);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>

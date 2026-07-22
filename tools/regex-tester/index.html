@@ -1,0 +1,164 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regex Tester — live matches, offline | BrowserTools</title>
+<meta name="description" content="Test a regular expression against sample text and see every match highlighted live, entirely in your browser.">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  mark { background: var(--brand-soft); color: var(--brand); border-radius: 3px; padding: 0 1px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidenav">
+    <div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+    <h4>PDF</h4>
+    <ul>
+      <li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+      <li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+      <li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+      <li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+      <li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+      <li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+      <li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+      <li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+      <li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+      <li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+      <li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+      <li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+    </ul>
+
+    <h4>Media</h4>
+<ul>
+      <li><a href="/tools/video-to-audio/">Video to Audio</a></li>
+      <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+      <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+      <li><a href="/tools/video-compress/">Video Compress</a></li>
+<li><a href="/tools/image-compress/">Image Compress</a></li>
+    </ul>
+
+<h4>Dev &amp; Security</h4>
+    <ul>
+      <li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+      <li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+      <li><a href="/tools/regex-tester/" class="active">Regex Tester</a></li>
+    </ul>
+  </nav>
+
+  <main class="main">
+    <header class="tool-header">
+      <div class="led-row" style="margin-bottom:8px;">
+        <span id="led" class="led" data-state="done"></span><span id="ledLabel" class="led-label">live — local</span>
+      </div>
+      <h1>Regex Tester</h1>
+      <p>Matches update as you type. Everything runs in this tab using your browser's own regex engine.</p>
+    </header>
+
+    <div class="field">
+      <label for="patternInput">Pattern</label>
+      <input type="text" id="patternInput" placeholder="\b[\w.-]+@[\w.-]+\.\w+\b" value="\b[\w.-]+@[\w.-]+\.\w+\b">
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="flagG" checked> global (g) &nbsp; <input type="checkbox" id="flagI"> ignore case (i) &nbsp; <input type="checkbox" id="flagM"> multiline (m)</label>
+    </div>
+    <div class="field">
+      <label for="sampleInput">Sample text</label>
+      <textarea id="sampleInput" rows="8">Contact us at hello@example.com or support@browsertools.dev for help.</textarea>
+    </div>
+
+
+    <div class="field" style="margin-top:16px;">
+      <label>Highlighted matches</label>
+      <div id="highlightOut" class="output-box"></div>
+    </div>
+    <div class="field">
+      <label id="matchCountLabel">Matches</label>
+      <div id="matchList" class="output-box">—</div>
+    </div>
+
+    <section class="faq">
+      <h3>How this works</h3>
+      <p>Your pattern is compiled with JavaScript's native RegExp engine and run directly against your sample text in the page. Matches are highlighted inline and listed with their position, so you can confirm a pattern behaves the way you expect before using it in real code.</p>
+      <h3>Common uses</h3>
+      <p>Validating an email or phone number format, extracting IDs from log lines, or debugging why a pattern isn't matching what you expect.</p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const patternInput = document.getElementById('patternInput');
+const sampleInput = document.getElementById('sampleInput');
+const highlightOut = document.getElementById('highlightOut');
+const matchList = document.getElementById('matchList');
+const matchCountLabel = document.getElementById('matchCountLabel');
+const led = document.getElementById('led');
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function run() {
+  const pattern = patternInput.value;
+  const text = sampleInput.value;
+  let flags = '';
+  if (document.getElementById('flagG').checked) flags += 'g';
+  if (document.getElementById('flagI').checked) flags += 'i';
+  if (document.getElementById('flagM').checked) flags += 'm';
+
+  if (!pattern) {
+    highlightOut.innerHTML = escapeHtml(text);
+    matchList.textContent = '—';
+    matchCountLabel.textContent = 'Matches';
+    return;
+  }
+
+  try {
+    const re = new RegExp(pattern, flags);
+    led.dataset.state = 'live';
+    let html = '';
+    let lastIndex = 0;
+    const matches = [];
+
+    if (flags.includes('g')) {
+      let m;
+      const safe = new RegExp(pattern, flags);
+      while ((m = safe.exec(text)) !== null) {
+        matches.push(m);
+        html += escapeHtml(text.slice(lastIndex, m.index)) + '<mark>' + escapeHtml(m[0]) + '</mark>';
+        lastIndex = m.index + (m[0].length || 1);
+        if (m[0].length === 0) safe.lastIndex++;
+      }
+      html += escapeHtml(text.slice(lastIndex));
+    } else {
+      const m = re.exec(text);
+      if (m) {
+        matches.push(m);
+        html = escapeHtml(text.slice(0, m.index)) + '<mark>' + escapeHtml(m[0]) + '</mark>' + escapeHtml(text.slice(m.index + m[0].length));
+      } else {
+        html = escapeHtml(text);
+      }
+    }
+
+    highlightOut.innerHTML = html || '(empty)';
+    matchCountLabel.textContent = matches.length + (matches.length === 1 ? ' match' : ' matches');
+    matchList.textContent = matches.length
+      ? matches.map((m, i) => `${i + 1}. "${m[0]}" at index ${m.index}`).join('\n')
+      : 'No matches.';
+    led.dataset.state = 'done';
+  } catch (e) {
+    highlightOut.textContent = 'Invalid pattern: ' + e.message;
+    matchList.textContent = '—';
+    matchCountLabel.textContent = 'Matches';
+    led.dataset.state = 'idle';
+  }
+}
+
+[patternInput, sampleInput].forEach(el => el.addEventListener('input', run));
+['flagG', 'flagI', 'flagM'].forEach(id => document.getElementById(id).addEventListener('change', run));
+run();
+</script>
+</body>
+</html>

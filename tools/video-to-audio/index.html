@@ -1,0 +1,169 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video to Audio — offline, no upload | BrowserTools</title>
+<meta name="description" content="Extract audio from a video file and save it as an MP3 entirely in your browser. No upload, no file size limit.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+<nav class="sidenav">
+<div class="brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px;"><span class="led" data-state="done"></span> BrowserTools</a></div>
+<h4>PDF</h4>
+<ul>
+<li><a href="/tools/pdf-merge/">Merge PDFs</a></li>
+<li><a href="/tools/pdf-to-images/">PDF to images</a></li>
+<li><a href="/tools/pdf-compress/">Compress PDF</a></li>
+<li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
+<li><a href="/tools/word-to-pdf/">Word to PDF</a></li>
+<li><a href="/tools/pdf-to-excel/">PDF to Excel</a></li>
+<li><a href="/tools/excel-to-pdf/">Excel to PDF</a></li>
+<li><a href="/tools/images-to-pdf/">Images to PDF</a></li>
+<li><a href="/tools/pdf-to-csv/">PDF to CSV</a></li>
+<li><a href="/tools/csv-to-pdf/">CSV to PDF</a></li>
+<li><a href="/tools/pdf-to-txt/">PDF to Text</a></li>
+<li><a href="/tools/pdf-utils/">PDF Utilities</a></li>
+</ul>
+<h4>Media</h4>
+<ul>
+  <li><a href="/tools/video-to-audio/" class="active">Video to Audio</a></li>
+  <li><a href="/tools/audio-to-video/">Audio to Video</a></li>
+  <li><a href="/tools/video-to-gif/">Video to GIF</a></li>
+  <li><a href="/tools/video-compress/">Video Compress</a></li>
+  <li><a href="/tools/image-compress/">Image Compress</a></li>
+</ul>
+<h4>Dev &amp; Security</h4>
+<ul>
+<li><a href="/tools/json-to-csv/">JSON → CSV</a></li>
+<li><a href="/tools/jwt-decoder/">JWT Decoder</a></li>
+<li><a href="/tools/regex-tester/">Regex Tester</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<header class="tool-header">
+<div class="led-row" style="margin-bottom:8px;">
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+</div>
+<h1>Video to Audio</h1>
+<p>Extract audio from a video file and save it as an MP3 entirely in this tab. Your file never leaves your device.</p>
+</header>
+
+<div id="dropzone" class="dropzone">Drop video files here, or click to choose</div>
+<input type="file" id="fileInput" accept="video/mp4,video/webm,video/ogg,video/quicktime" style="display:none;">
+
+<button class="btn" id="convertBtn" disabled>Extract Audio</button>
+
+
+<div id="resultArea"></div>
+
+<section class="faq">
+<h3>How this works</h3>
+<p>This tool uses ffmpeg.wasm, a WebAssembly port of FFmpeg, to run the command <code>-i input -vn -ab 128k -ar 44100 -f mp3 output.mp3</code> directly in your browser. The video is loaded into memory, processed, and the resulting audio is offered as a download. Nothing is uploaded to a server.</p>
+<h3>Common uses</h3>
+<p>Extracting soundtracks from video clips, saving audio from recorded presentations, or converting video lectures to audio for listening on the go.</p>
+</section>
+
+</main>
+</div>
+
+<!-- Load FFmpeg only when needed -->
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const convertBtn = document.getElementById('convertBtn');
+const resultArea = document.getElementById('resultArea');
+const led = document.getElementById('led');
+const ledLabel = document.getElementById('ledLabel');
+
+let videoFile = null;
+let ffmpeg = null;
+let ffmpegReady = false;
+
+function setLed(state, text) {
+  led.dataset.state = state;
+  ledLabel.textContent = text;
+}
+
+// Lazy load FFmpeg
+async function loadFFmpeg() {
+  if (ffmpegReady) return ffmpeg;
+  setLed('live', 'loading FFmpeg…');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Loading FFmpeg (this may take a moment)…</p>';
+  // Create promises for the two scripts
+  const ffmpegScript = document.createElement('script');
+  ffmpegScript.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js';
+  ffmpegScript.type = 'module';
+  const coreScript = document.createElement('script');
+  coreScript.src = 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js';
+  coreScript.type = 'module';
+  // Wait for both to load
+  await Promise.all([
+    new Promise((resolve, reject) => { ffmpegScript.onload = resolve; ffmpegScript.onerror = reject; document.head.appendChild(ffmpegScript); }),
+    new Promise((resolve, reject) => { coreScript.onload = resolve; coreScript.onerror = reject; document.head.appendChild(coreScript); })
+  ]);
+  // Now FFmpeg is available on window
+  const { FFmpeg } = window.FFmpeg;
+  ffmpeg = new FFmpeg({ coreURL: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/core.min.js' });
+  await ffmpeg.load();
+  ffmpegReady = true;
+  setLed('done', 'ready — local');
+  resultArea.innerHTML = '';
+  return ffmpeg;
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('video/')) {
+    dropzone.textContent = 'Drop video files here, or click to choose';
+    convertBtn.disabled = true;
+    resultArea.innerHTML = `<p style="color:#B3261E;">Please select a video file</p>`;
+    setLed('idle', 'ready — local');
+    return;
+  }
+  videoFile = await readFileAsArrayBuffer(file);
+  dropzone.textContent = `${file.name} — ready to convert`;
+  convertBtn.disabled = false;
+  resultArea.innerHTML = '';
+  setLed('done', 'ready — local');
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!videoFile) return;
+  setLed('live', 'processing — local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Extracting audio…</p>';
+  try {
+    const ffmpegInstance = await loadFFmpeg();
+    // Write input file to FFmpeg FS
+    const inputName = 'input.mp4';
+    await ffmpegInstance.FS('writeFile', inputName, new Uint8Array(videoFile));
+    // Run ffmpeg command to extract audio as mp3
+    await ffmpegInstance.run('-i', inputName, '-vn', '-ab', '128k', '-ar', '44100', '-f', 'mp3', 'output.mp3');
+    // Read the output file
+    const data = await ffmpegInstance.FS('readFile', 'output.mp3');
+    const blob = new Blob([data.buffer], {type: 'audio/mpeg'});
+    const url = URL.createObjectURL(blob);
+    resultArea.innerHTML = `<a class="btn" href="${url}" download="extracted.mp3" style="display:inline-block;margin-top:12px;">Download extracted.mp3</a>`;
+    setLed('done', 'done — left this device');
+  } catch (err) {
+    console.error(err);
+    resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
+    setLed('idle', 'ready — local');
+  }
+});
+</script>
+</body>
+</html>
