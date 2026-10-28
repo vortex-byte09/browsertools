@@ -1,14 +1,13 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="en">
 <head>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="263602" async data-cfasync="false"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<title>Compress PDF — offline, no upload | BrowserTools</title>
+<title>Compress PDF ï¿½ offline, no upload | BrowserTools</title>
 <meta name="description" content="Shrink a PDF's file size entirely in your browser, with an adjustable quality level. No upload required.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -68,10 +67,10 @@
   <main class="main">
     <header class="tool-header">
       <div class="led-row" style="margin-bottom:8px;">
-        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready ï¿½ local</span>
       </div>
       <h1>Compress PDF</h1>
-      <p>Reduce a PDF's file size by re-encoding each page at a lower image quality. Runs in this tab — nothing is uploaded.</p>
+      <p>Reduce a PDF's file size by re-encoding each page at a lower image quality. Runs in this tab ï¿½ nothing is uploaded.</p>
     </header>
 
     <div id="dropzone" class="dropzone">Drop a PDF here, or click to choose</div>
@@ -92,7 +91,7 @@
 
     <section class="faq">
       <h3>How this works</h3>
-      <p>This tool renders each page to an image using pdf.js, re-encodes that image as a JPEG at the quality level you choose, and rebuilds a new PDF from those images with pdf-lib. This is the same technique most online compressors use, and it works especially well on scanned documents or PDFs with large embedded photos. One trade-off: text becomes part of the page image, so it's no longer selectable or searchable in the compressed file — for documents where you need to keep real text, this isn't the right tool.</p>
+      <p>This tool renders each page to an image using pdf.js, re-encodes that image as a JPEG at the quality level you choose, and rebuilds a new PDF from those images with pdf-lib. This is the same technique most online compressors use, and it works especially well on scanned documents or PDFs with large embedded photos. One trade-off: text becomes part of the page image, so it's no longer selectable or searchable in the compressed file ï¿½ for documents where you need to keep real text, this isn't the right tool.</p>
       <h3>Common uses</h3>
       <p>Shrinking a scanned document before emailing it, reducing a photo-heavy report so it fits an upload limit, or archiving large PDFs with less disk space.</p>
     </section>
@@ -142,15 +141,15 @@ async function handleFile(file) {
   pdfBuf = await file.arrayBuffer();
   originalSize = file.size;
   originalName = file.name.replace(/\.pdf$/i, '');
-  dropzone.textContent = file.name + ' (' + formatBytes(originalSize) + ') — ready to compress';
+  dropzone.textContent = file.name + ' (' + formatBytes(originalSize) + ') ï¿½ ready to compress';
   compressBtn.disabled = false;
   resultEl.innerHTML = '';
 }
 
 compressBtn.addEventListener('click', async () => {
   if (!pdfBuf) return;
-  setLed('live', 'processing — local');
-  resultEl.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing — this can take a moment for large files…</p>';
+  setLed('live', 'processing ï¿½ local');
+  resultEl.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing ï¿½ this can take a moment for large filesï¿½</p>';
 
   const level = Number(document.getElementById('qualitySlider').value);
   // level 1 = smaller file: lower scale + lower jpeg quality
@@ -202,10 +201,10 @@ ${pctLabel}
       </div>
       <a class="btn" href="${url}" download="${originalName}-compressed.pdf">Download compressed PDF</a>
     `;
-    setLed('done', 'done — nothing left this device');
+    setLed('done', 'done ï¿½ nothing left this device');
   } catch (e) {
     resultEl.innerHTML = `<p style="color:#B3261E;">Error: ${e.message}</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   }
 });
 </script>
@@ -226,5 +225,5 @@ ${pctLabel}
   overlay.addEventListener('click', closeNav);
   nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeNav); });
 })();
-</script><script src="https://5gvci.com/act/files/micro-sdk.min.js?z=11398227" async></script></body>
+</script></body>
 </html>

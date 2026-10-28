@@ -1,14 +1,13 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="en">
 <head>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="263602" async data-cfasync="false"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<title>PDF to Images — offline, no upload | BrowserTools</title>
+<title>PDF to Images ï¿½ offline, no upload | BrowserTools</title>
 <meta name="description" content="Export every page of a PDF as a PNG or JPG image, entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
@@ -74,10 +73,10 @@
   <main class="main">
     <header class="tool-header">
       <div class="led-row" style="margin-bottom:8px;">
-        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready ï¿½ local</span>
       </div>
       <h1>PDF to Images</h1>
-      <p>Turn each page into a downloadable PNG or JPG. Rendering happens in this tab — the PDF is never uploaded.</p>
+      <p>Turn each page into a downloadable PNG or JPG. Rendering happens in this tab ï¿½ the PDF is never uploaded.</p>
     </header>
 
     <div id="dropzone" class="dropzone">Drop a PDF here, or click to choose</div>
@@ -91,9 +90,9 @@
       </select>
       <label style="margin-top:12px;">Resolution</label>
       <select id="scaleSelect" style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;background:var(--panel);color:var(--ink);">
-        <option value="1">1x — screen quality</option>
-        <option value="2" selected>2x — print quality</option>
-        <option value="3">3x — high resolution</option>
+        <option value="1">1x ï¿½ screen quality</option>
+        <option value="2" selected>2x ï¿½ print quality</option>
+        <option value="3">3x ï¿½ high resolution</option>
       </select>
     </div>
 
@@ -149,13 +148,13 @@ dropzone.addEventListener('drop', (e) => {
 async function handleFile(file) {
   if (!file || file.type !== 'application/pdf') return;
   pdfBuf = await file.arrayBuffer();
-  dropzone.textContent = file.name + ' — ready to convert';
+  dropzone.textContent = file.name + ' ï¿½ ready to convert';
   convertBtn.disabled = false;
 }
 
 convertBtn.addEventListener('click', async () => {
   if (!pdfBuf) return;
-  setLed('live', 'processing — local');
+  setLed('live', 'processing ï¿½ local');
   pagesEl.innerHTML = '';
   downloadAllBtn.style.display = 'none';
   renderedImages = [];
@@ -201,10 +200,10 @@ convertBtn.addEventListener('click', async () => {
     }
 
     if (renderedImages.length > 1) downloadAllBtn.style.display = 'inline-block';
-    setLed('done', 'done — nothing left this device');
+    setLed('done', 'done ï¿½ nothing left this device');
   } catch (e) {
     pageCountEl.textContent = 'Error: ' + e.message;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   }
 });
 
@@ -236,5 +235,5 @@ downloadAllBtn.addEventListener('click', async () => {
   overlay.addEventListener('click', closeNav);
   nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeNav); });
 })();
-</script><script src="https://5gvci.com/act/files/micro-sdk.min.js?z=11398227" async></script></body>
+</script></body>
 </html>

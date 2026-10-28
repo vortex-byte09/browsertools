@@ -1,14 +1,13 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="en">
 <head>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="263602" async data-cfasync="false"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<title>PDF to Excel (.xlsx) — offline, no upload | BrowserTools</title>
+<title>PDF to Excel (.xlsx) ï¿½ offline, no upload | BrowserTools</title>
 <meta name="description" content="Extract tables from a PDF and save them as an Excel workbook (.xlsx) entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -68,7 +67,7 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready ï¿½ local</span>
 </div>
 <h1>PDF to Excel (.xlsx)</h1>
 <p>Extract tables from a PDF and save them as an Excel workbook entirely in this tab. Your file never leaves your device.</p>
@@ -84,7 +83,7 @@
 
 <section class="faq">
 <h3>How this works</h3>
-<p>This tool uses PDF.js to read the PDF file and extracts the text content. It then groups text lines by their vertical position to form rows, and splits rows by multiple spaces to create cells. The resulting grid is written to an Excel workbook with the SheetJS library. Everything happens locally in your browser — no upload to a server.</p>
+<p>This tool uses PDF.js to read the PDF file and extracts the text content. It then groups text lines by their vertical position to form rows, and splits rows by multiple spaces to create cells. The resulting grid is written to an Excel workbook with the SheetJS library. Everything happens locally in your browser ï¿½ no upload to a server.</p>
 <h3>Common uses</h3>
 <p>Pulling data tables out of reports or scanned PDFs for further analysis in Excel or Google Sheets, converting financial statements, or extracting survey results from a PDF form.</p>
 </section>
@@ -170,21 +169,21 @@ fileInput.addEventListener('change', async (e) => {
   try {
     pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
     convertBtn.disabled = false;
-    dropzone.textContent = `${file.name} — ready to convert (${pdfDoc.numPages} pages)`;
-    setLed('done', 'ready — local');
+    dropzone.textContent = `${file.name} ï¿½ ready to convert (${pdfDoc.numPages} pages)`;
+    setLed('done', 'ready ï¿½ local');
     resultArea.innerHTML = '';
   } catch (err) {
     dropzone.textContent = 'Drop PDF files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Error loading PDF: ${err.message}</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   }
 });
 
 convertBtn.addEventListener('click', async () => {
   if (!pdfDoc) return;
-  setLed('live', 'processing — local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
+  setLed('live', 'processing ï¿½ local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Convertingï¿½</p>';
   try {
     // We'll convert the first page only for simplicity; you could loop over all pages.
     const tableData = await extractTableData(pdfDoc);
@@ -196,10 +195,10 @@ convertBtn.addEventListener('click', async () => {
     const blob = new Blob([wbout], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="extracted.xlsx" style="display:inline-block;margin-top:12px;">Download extracted.xlsx</a>`;
-    setLed('done', 'done — nothing left this device');
+    setLed('done', 'done ï¿½ nothing left this device');
   } catch (err) {
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   }
 });
 </script>
@@ -220,5 +219,5 @@ convertBtn.addEventListener('click', async () => {
   overlay.addEventListener('click', closeNav);
   nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeNav); });
 })();
-</script><script src="https://5gvci.com/act/files/micro-sdk.min.js?z=11398227" async></script></body>
+</script></body>
 </html>

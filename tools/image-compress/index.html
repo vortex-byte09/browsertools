@@ -1,14 +1,13 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="en">
 <head>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="263602" async data-cfasync="false"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<title>Image Compress — offline, no upload | BrowserTools</title>
+<title>Image Compress ï¿½ offline, no upload | BrowserTools</title>
 <meta name="description" content="Compress JPG, PNG, WebP images entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -68,10 +67,10 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready ï¿½ local</span>
 </div>
 <h1>Image Compress</h1>
-<p>Compress JPG, PNG, or WebP images to reduce file size while controlling quality. Everything happens in this tab — your images never leave your device.</p>
+<p>Compress JPG, PNG, or WebP images to reduce file size while controlling quality. Everything happens in this tab ï¿½ your images never leave your device.</p>
 </header>
 
 <div id="dropzone" class="dropzone">Drop image files here, or click to choose</div>
@@ -155,7 +154,7 @@ fileInput.addEventListener('change', async (e) => {
     document.getElementById('options').style.display = 'none';
     compressBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select an image file</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
     return;
   }
   const arrayBuffer = await file.arrayBuffer();
@@ -173,12 +172,12 @@ fileInput.addEventListener('change', async (e) => {
     options.style.display = 'block';
     origName.textContent = file.name;
     origSize.textContent = formatBytes(file.size);
-    origDim.textContent = `${img.width} × ${img.height}`;
+    origDim.textContent = `${img.width} ï¿½ ${img.height}`;
     // Reset quality display
     qualityValue.textContent = qualitySlider.value;
     compressBtn.disabled = false;
     resultArea.innerHTML = '';
-    setLed('done', 'ready — local');
+    setLed('done', 'ready ï¿½ local');
   };
   img.onerror = () => {
     URL.revokeObjectURL(url);
@@ -187,7 +186,7 @@ fileInput.addEventListener('change', async (e) => {
     options.style.display = 'none';
     compressBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Failed to load image</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   };
 });
 
@@ -197,8 +196,8 @@ qualitySlider.addEventListener('input', () => {
 
 compressBtn.addEventListener('click', async () => {
   if (!imageBlob) return;
-  setLed('live', 'processing — local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing image…</p>';
+  setLed('live', 'processing ï¿½ local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Compressing imageï¿½</p>';
   try {
     const img = new Image();
     img.src = URL.createObjectURL(new Blob([imageBlob]));
@@ -239,11 +238,11 @@ compressBtn.addEventListener('click', async () => {
       }
     </div>
     <a class="btn" href="${url}" download="compressed.${format}" style="display:inline-block;margin-top:8px;">Download compressed image</a>`;
-    setLed('done', 'done — left this device');
+    setLed('done', 'done ï¿½ left this device');
   } catch (err) {
     console.error(err);
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   }
 });
 </script>
@@ -264,5 +263,5 @@ compressBtn.addEventListener('click', async () => {
   overlay.addEventListener('click', closeNav);
   nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeNav); });
 })();
-</script><script src="https://5gvci.com/act/files/micro-sdk.min.js?z=11398227" async></script></body>
+</script></body>
 </html>

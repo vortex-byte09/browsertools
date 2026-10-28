@@ -1,14 +1,13 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="en">
 <head>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="263602" async data-cfasync="false"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<title>Excel to PDF — offline, no upload | BrowserTools</title>
+<title>Excel to PDF ï¿½ offline, no upload | BrowserTools</title>
 <meta name="description" content="Convert Excel (.xlsx) workbooks to PDF entirely in your browser. No upload, no file size limit.">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -68,7 +67,7 @@
 <main class="main">
 <header class="tool-header">
 <div class="led-row" style="margin-bottom:8px;">
-<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+<span id="led" class="led"></span><span id="ledLabel" class="led-label">ready ï¿½ local</span>
 </div>
 <h1>Excel to PDF (.pdf)</h1>
 <p>Convert Excel workbooks to PDF entirely in this tab. Your file never leaves your device.</p>
@@ -89,7 +88,7 @@
 
 <section class="faq">
 <h3>How this works</h3>
-<p>This tool uses SheetJS to read the Excel workbook, converts each worksheet to an HTML table, and then uses jsPDF with the autotable plugin to render those tables into a PDF file. All processing happens locally in your browser — no upload to a server.</p>
+<p>This tool uses SheetJS to read the Excel workbook, converts each worksheet to an HTML table, and then uses jsPDF with the autotable plugin to render those tables into a PDF file. All processing happens locally in your browser ï¿½ no upload to a server.</p>
 <h3>Common uses</h3>
 <p>Sharing Excel reports as PDF for printing or archiving, converting spreadsheets for email attachments, or creating printable versions of financial statements.</p>
 </section>
@@ -133,20 +132,20 @@ fileInput.addEventListener('change', async (e) => {
     dropzone.textContent = 'Drop Excel files here, or click to choose';
     convertBtn.disabled = true;
     resultArea.innerHTML = `<p style="color:#B3261E;">Please select a .xlsx file</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
     return;
   }
   workbook = await readFileAsArrayBuffer(file);
-  dropzone.textContent = `${file.name} — ready to convert`;
+  dropzone.textContent = `${file.name} ï¿½ ready to convert`;
   convertBtn.disabled = false;
   resultArea.innerHTML = '';
-  setLed('done', 'ready — local');
+  setLed('done', 'ready ï¿½ local');
 });
 
 convertBtn.addEventListener('click', async () => {
   if (!workbook) return;
-  setLed('live', 'processing — local');
-  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Converting…</p>';
+  setLed('live', 'processing ï¿½ local');
+  resultArea.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Convertingï¿½</p>';
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({unit:'pt', format:'a4'});
@@ -185,10 +184,10 @@ convertBtn.addEventListener('click', async () => {
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="converted.pdf" style="display:inline-block;margin-top:12px;">Download converted.pdf</a>`;
-    setLed('done', 'done — nothing left this device');
+    setLed('done', 'done ï¿½ nothing left this device');
   } catch (err) {
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${err.message}</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   }
 });
 </script>
@@ -209,5 +208,5 @@ convertBtn.addEventListener('click', async () => {
   overlay.addEventListener('click', closeNav);
   nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeNav); });
 })();
-</script><script src="https://5gvci.com/act/files/micro-sdk.min.js?z=11398227" async></script></body>
+</script></body>
 </html>

@@ -1,14 +1,13 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="en">
 <head>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="263602" async data-cfasync="false"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<title>Merge PDFs — offline, no upload | BrowserTools</title>
+<title>Merge PDFs ï¿½ offline, no upload | BrowserTools</title>
 <meta name="description" content="Combine multiple PDF files into one, in your chosen order, entirely in your browser. No upload, no file size games.">
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
@@ -75,10 +74,10 @@
   <main class="main">
     <header class="tool-header">
       <div class="led-row" style="margin-bottom:8px;">
-        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready — local</span>
+        <span id="led" class="led"></span><span id="ledLabel" class="led-label">ready ï¿½ local</span>
       </div>
       <h1>Merge PDFs</h1>
-      <p>Add files, reorder them, and merge. Your PDFs are read and combined in this tab — none of them are uploaded, so there's no file size limit tied to a server.</p>
+      <p>Add files, reorder them, and merge. Your PDFs are read and combined in this tab ï¿½ none of them are uploaded, so there's no file size limit tied to a server.</p>
     </header>
 
     <div id="dropzone" class="dropzone">Drop PDF files here, or click to choose</div>
@@ -165,7 +164,7 @@ dropzone.addEventListener('drop', (e) => {
 });
 
 mergeBtn.addEventListener('click', async () => {
-  setLed('live', 'processing — local');
+  setLed('live', 'processing ï¿½ local');
   resultArea.innerHTML = '';
   try {
     const { PDFDocument } = PDFLib;
@@ -179,10 +178,10 @@ mergeBtn.addEventListener('click', async () => {
     const blob = new Blob([bytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     resultArea.innerHTML = `<a class="btn" href="${url}" download="merged.pdf" style="display:inline-block;margin-top:12px;">Download merged.pdf</a>`;
-    setLed('done', 'done — nothing left this device');
+    setLed('done', 'done ï¿½ nothing left this device');
   } catch (e) {
     resultArea.innerHTML = `<p style="color:#B3261E;">Error: ${e.message}</p>`;
-    setLed('idle', 'ready — local');
+    setLed('idle', 'ready ï¿½ local');
   }
 });
 </script>
@@ -203,5 +202,5 @@ mergeBtn.addEventListener('click', async () => {
   overlay.addEventListener('click', closeNav);
   nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeNav); });
 })();
-</script><script src="https://5gvci.com/act/files/micro-sdk.min.js?z=11398227" async></script></body>
+</script></body>
 </html>
